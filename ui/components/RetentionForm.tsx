@@ -9,6 +9,7 @@ export default function RetentionForm() {
   const [showPaywall, setShowPaywall] = useState(false);
 
   async function handleAnalyze() {
+    if (loading) return;
     setLoading(true);
     setResult("");
     setShowPaywall(false);
