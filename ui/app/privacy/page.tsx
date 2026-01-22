@@ -26,7 +26,7 @@ export default function Privacy() {
 
       <h3>Contact</h3>
       <p>
-        Questions? Email: aisan.tafeem@gmail.com
+        Questions? Email: aisantafeem@gmail.com
       </p>
     </div>
   );
