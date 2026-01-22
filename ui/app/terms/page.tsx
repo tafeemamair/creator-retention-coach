@@ -28,7 +28,7 @@ export default function Terms() {
 
       <h3>Contact</h3>
       <p>
-        For support, contact: aisan.tafeem@gmail.com
+        For support, contact: aisantafeem@gmail.com
       </p>
     </div>
   );
