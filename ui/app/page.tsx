@@ -8,7 +8,7 @@ export default function Home() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#0b0b0b",
+        background: "radial-gradient(circle at top, #1a1a1a, #0e0e0e)",
         padding: 16,
       }}
     >
