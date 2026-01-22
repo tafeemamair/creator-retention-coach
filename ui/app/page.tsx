@@ -1,4 +1,4 @@
-import RetentionForm from "./RetentionForm";
+import RetentionForm from "../components/RetentionForm";
 
 export default function Home() {
   return (
