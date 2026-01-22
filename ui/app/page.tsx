@@ -1,19 +1,18 @@
-import RetentionForm from "../components/RetentionForm";
+import RetentionForm from "./RetentionForm";
 
-export default function Page() {
+export default function Home() {
   return (
-    <main
+    <div
       style={{
         minHeight: "100vh",
         display: "flex",
+        alignItems: "center",
         justifyContent: "center",
-        alignItems: "flex-start",
-        paddingTop: 80,
         background: "#0b0b0b",
+        padding: 16,
       }}
     >
       <RetentionForm />
-    </main>
+    </div>
   );
 }
-
