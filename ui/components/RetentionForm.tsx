@@ -145,6 +145,17 @@ export default function RetentionForm() {
       <p style={{ marginTop: 24, fontSize: 12, color: "#888" }}>
         <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a>
       </p>
+     <hr style={{ marginTop: 28, marginBottom: 12, borderColor: "#eee" }} />
+     
+     <p style={{ fontSize: 12, color: "#777", textAlign: "center" }}>
+       <a href="/terms" style={{ color: "#555", textDecoration: "none" }}>
+         Terms
+       </a>
+       {" · "}
+       <a href="/privacy" style={{ color: "#555", textDecoration: "none" }}>
+         Privacy
+       </a>
+     </p>
     </>
   );
 }
