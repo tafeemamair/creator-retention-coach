@@ -44,7 +44,7 @@ export default function RetentionForm() {
         boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
       }}
     >
-      <h1 style={{ fontSize: 24, marginBottom: 8 }}>
+      <h1 style={{ fontSize: 24, marginBottom: 8, color: "#111" }}>
         Creator Retention Coach
       </h1>
 
