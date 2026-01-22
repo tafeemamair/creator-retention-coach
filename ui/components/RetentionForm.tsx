@@ -33,11 +33,25 @@ export default function RetentionForm() {
   }
 
   return (
-    <div style={{ maxWidth: 600 }}>
-      <h2>Creator Retention Coach</h2>
-      <p style={{ color: "#666", marginBottom: 12 }}>
-        Predict where viewers drop off — before you publish.
+   <>
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 640,
+        padding: 24,
+        background: "#ffffff",
+        borderRadius: 12,
+        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+      }}
+    >
+      <h1 style={{ fontSize: 24, marginBottom: 8 }}>
+        Creator Retention Coach
+      </h1>
+
+      <p style={{ color: "#555", marginBottom: 16 }}>
+        Predict where viewers drop off - before you publish.
       </p>
+
 
       <textarea
         rows={7}
@@ -69,6 +83,10 @@ export default function RetentionForm() {
       >
         {loading ? "Analyzing..." : "Analyze Retention"}
       </button>
+
+      <p style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
+        Full analysis costs <b>₹49</b> (one-time)
+      </p>
 
       {result && <hr style={{ marginTop: 24, marginBottom: 16 }} />}
 
@@ -124,5 +142,9 @@ export default function RetentionForm() {
         <strong> Upgrade</strong> to unlock exact fixes and optimized hooks.
       </p>
     </div>
+      <p style={{ marginTop: 24, fontSize: 12, color: "#888" }}>
+        <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a>
+      </p>
+    </>
   );
 }
