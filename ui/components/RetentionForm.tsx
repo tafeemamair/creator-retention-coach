@@ -9,6 +9,14 @@ export default function RetentionForm() {
   const [showPaywall, setShowPaywall] = useState(false);
 
   async function handleAnalyze() {
+    if (!script.trim()) {
+      setResult("Please paste a script before analyzing.");
+      setLoading(false);
+      return;
+    }
+
+
+    
     if (loading) return;
     setLoading(true);
     setResult("");
@@ -39,7 +47,7 @@ export default function RetentionForm() {
   }
 
   return (
-   <>
+    
     <div
       style={{
         width: "100%",
@@ -78,7 +86,7 @@ export default function RetentionForm() {
 
       <button
         onClick={handleAnalyze}
-        disabled={loading || !script}
+        disabled={loading || !script.trim()}
         style={{
           padding: "10px 16px",
           fontSize: 14,
@@ -108,6 +116,7 @@ export default function RetentionForm() {
             border: "1px solid #e5e5e5",
             whiteSpace: "pre-wrap",
             fontSize: 14,
+            color: "#111",
           }}
         >
           {result}
