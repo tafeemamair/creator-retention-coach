@@ -7,6 +7,8 @@ export default function RetentionForm() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [error, setError] = useState("");
+
 
   async function handleAnalyze() {
     
