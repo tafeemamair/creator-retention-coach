@@ -76,16 +76,21 @@ export default function RetentionForm() {
       <textarea
         rows={7}
         value={script}
-        onChange={(e) => {
-          console.log("ON CHANGE FIRED:", e.target.value);
-          setScript(e.target.value);
+        onChange={(e) => setScript(e.target.value)}
+        onPaste={(e) => {
+          console.log("PASTE EVENT:", e.clipboardData.getData("text"));
         }}
         style={{
           width: "100%",
           padding: 12,
+          fontSize: 14,
+          borderRadius: 6,
           border: "2px solid red",
+          backgroundColor: "#000",   // force contrast
+          color: "#00ff00",
         }}
       />
+
 
       <div style={{ marginTop: 8, fontSize: 12, color: "yellow" }}>
         SCRIPT VALUE: [{script}]
