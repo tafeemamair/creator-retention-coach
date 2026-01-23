@@ -45,9 +45,9 @@ export default function RetentionForm() {
         width: "100%",
         maxWidth: 640,
         padding: 24,
-        background: "#ffffff",
+        background: "#f9fafb",
         borderRadius: 12,
-        boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
       }}
     >
       <h1 style={{ fontSize: 24, marginBottom: 8, color: "#111" }}>
@@ -150,20 +150,5 @@ export default function RetentionForm() {
         <strong> Upgrade</strong> to unlock exact fixes and optimized hooks.
       </p>
     </div>
-      <p style={{ marginTop: 24, fontSize: 12, color: "#888" }}>
-        <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a>
-      </p>
-     <hr style={{ marginTop: 28, marginBottom: 12, borderColor: "#eee" }} />
-     
-     <p style={{ fontSize: 12, color: "#777", textAlign: "center" }}>
-       <a href="/terms" style={{ color: "#555", textDecoration: "none" }}>
-         Terms
-       </a>
-       {" · "}
-       <a href="/privacy" style={{ color: "#555", textDecoration: "none" }}>
-         Privacy
-       </a>
-     </p>
-    </>
   );
 }
