@@ -13,8 +13,10 @@ export default function RetentionForm() {
   async function handleAnalyze() {
     
     if (loading) return;
+
+    console.log("SCRIPT LENGTH:", script.length, script);
     
-    if (!script.trim()) {
+    if (!script || !script.trim()) {
       setError("Please paste a script before analyzing.");
       setResult("");
       setShowPaywall(false);
@@ -26,25 +28,25 @@ export default function RetentionForm() {
     setResult("");
     setShowPaywall(false);
 
-    const res = await fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ script }),
-    });
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data.error) {
-      setError(data.error);
-      setLoading(false);
-      return;
-    }
-
-    if (data.blocked) {
-      setResult(data.message);
-      setShowPaywall(true);
-    } else {
-      setResult(data.result);
+      if (data.error) {
+        setError(data.error);
+      } else if (data.blocked) {
+        setResult(data.message);
+        setShowPaywall(true);
+      } else {
+        setResult(data.result);
+      }
+    } catch (e) {
+      setError("Something went wrong. Please try again.");
     }
 
     setLoading(false);
