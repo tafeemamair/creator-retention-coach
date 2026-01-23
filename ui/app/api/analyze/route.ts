@@ -5,16 +5,17 @@ let freeUsageCount = 0;
 
 export async function POST(req: Request) {
   const body = await req.json();
+  const script = body?.script;
 
-  // BASIC VALIDATION
-  return NextResponse.json(
-    { error: "Please paste a script before analyzing." },
-    { status: 400 }
-  );
+  // ✅ BASIC VALIDATION (REAL)
+  if (!script || !script.trim()) {
+    return NextResponse.json(
+      { error: "Please paste a script before analyzing." },
+      { status: 400 }
+    );
+  }
 
-
-
-  // FREE TIER LIMIT (₹49 paywall)
+  // ✅ FREE TIER LIMIT (₹49 paywall)
   if (freeUsageCount >= 1) {
     return NextResponse.json({
       blocked: true,
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
 
   freeUsageCount++;
 
-  const result = await analyzeRetention(body);
+  const result = await analyzeRetention(script);
 
   return NextResponse.json({
     blocked: false,
