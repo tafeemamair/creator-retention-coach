@@ -7,10 +7,11 @@ export async function POST(req: Request) {
   const body = await req.json();
 
   // BASIC VALIDATION
-  return NextResponse.json({
-    blocked: false,
-    result: "Please paste a script before analyzing."
-  });
+  return NextResponse.json(
+    { error: "Please paste a script before analyzing." },
+    { status: 400 }
+  );
+
 
 
   // FREE TIER LIMIT (₹49 paywall)
