@@ -75,24 +75,18 @@ export default function RetentionForm() {
 
       <textarea
         rows={7}
-        placeholder="Paste your video script or hook here..."
         value={script}
-        onInput={(e) => {
-          const value = e.currentTarget.value;
-          console.log("TEXTAREA INPUT:", value.length);
-          setScript(value);
+        onChange={(e) => {
+          console.log("ON CHANGE FIRED:", e.target.value);
+          setScript(e.target.value);
         }}
         style={{
           width: "100%",
           padding: 12,
-          fontSize: 14,
-          borderRadius: 6,
-          border: "1px solid #d1d5db",
-          marginBottom: 12,
-          color: "#111827",
-          backgroundColor: "#ffffff"
+          border: "2px solid red",
         }}
       />
+
 
       {error && (
         <div
