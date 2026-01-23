@@ -7,11 +7,11 @@ export async function POST(req: Request) {
   const body = await req.json();
 
   // BASIC VALIDATION
-  if (!body?.script || body.script.trim().length === 0) {
-    return NextResponse.json({
-      error: "Script is empty."
-    });
-  }
+  return NextResponse.json({
+    blocked: false,
+    result: "Please paste a script before analyzing."
+  });
+
 
   // FREE TIER LIMIT (₹49 paywall)
   if (freeUsageCount >= 1) {
