@@ -108,6 +108,7 @@ export default function RetentionForm() {
 
 
       <button
+        type="button"
         onClick={handleAnalyze}
         disabled={loading}
         style={{
