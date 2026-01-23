@@ -22,6 +22,12 @@ export default function RetentionForm() {
 
     const data = await res.json();
 
+    if (data.error) {
+      setResult(data.error);
+      setLoading(false);
+      return;
+    }
+
     if (data.blocked) {
       setResult(data.message);
       setShowPaywall(true);
@@ -63,8 +69,10 @@ export default function RetentionForm() {
           padding: 12,
           fontSize: 14,
           borderRadius: 6,
-          border: "1px solid #ccc",
+          border: "1px solid #d1d5db",
           marginBottom: 12,
+          color: "#111827",
+          backgroundColor: "#ffffff"
         }}
       />
 
