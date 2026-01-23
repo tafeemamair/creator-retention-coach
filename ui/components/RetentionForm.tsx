@@ -77,7 +77,11 @@ export default function RetentionForm() {
         rows={7}
         placeholder="Paste your video script or hook here..."
         value={script}
-        onChange={(e) => setScript(e.target.value)}
+        onInput={(e) => {
+          const value = e.currentTarget.value;
+          console.log("TEXTAREA INPUT:", value.length);
+          setScript(value);
+        }}
         style={{
           width: "100%",
           padding: 12,
