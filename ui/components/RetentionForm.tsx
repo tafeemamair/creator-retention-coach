@@ -87,6 +87,10 @@ export default function RetentionForm() {
         }}
       />
 
+      <div style={{ marginTop: 8, fontSize: 12, color: "yellow" }}>
+        SCRIPT VALUE: [{script}]
+      </div>
+
 
       {error && (
         <div
