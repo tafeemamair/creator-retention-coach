@@ -26,7 +26,7 @@ export default function RetentionForm() {
       setResult(data.message);
       setShowPaywall(true);
     } else {
-      setResult(data);
+      setResult(data.result);
     }
 
     setLoading(false);
