@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { analyzeRetention } from "../../../lib/analyze";
 
-let freeUsageCount = 0;
-
 export async function POST(req: Request) {
   const body = await req.json();
   const script = body?.script;
 
-  // ✅ BASIC VALIDATION (REAL)
+  // 1️⃣ BASIC VALIDATION
   if (!script || !script.trim()) {
     return NextResponse.json(
       { error: "Please paste a script before analyzing." },
@@ -15,8 +13,11 @@ export async function POST(req: Request) {
     );
   }
 
-  // ✅ FREE TIER LIMIT (₹49 paywall)
-  if (freeUsageCount >= 1) {
+  // 2️⃣ READ COOKIE
+  const cookieHeader = req.headers.get("cookie") || "";
+  const hasUsedFree = cookieHeader.includes("free_used=true");
+
+  if (hasUsedFree) {
     return NextResponse.json({
       blocked: true,
       price: 49,
@@ -24,12 +25,20 @@ export async function POST(req: Request) {
     });
   }
 
-  freeUsageCount++;
-
+  // 3️⃣ RUN ANALYSIS
   const result = await analyzeRetention(script);
 
-  return NextResponse.json({
+  // 4️⃣ SET COOKIE (mark free usage consumed)
+  const response = NextResponse.json({
     blocked: false,
     result
   });
+
+  response.headers.set(
+    "Set-Cookie",
+    "free_used=true; Path=/; Max-Age=2592000" // 30 days
+  );
+
+  return response;
 }
+
