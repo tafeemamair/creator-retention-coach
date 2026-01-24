@@ -75,26 +75,22 @@ export default function RetentionForm() {
 
       <textarea
         rows={7}
+        placeholder="Paste your video script or hook here..."
         value={script}
         onChange={(e) => setScript(e.target.value)}
-        onPaste={(e) => {
-          console.log("PASTE EVENT:", e.clipboardData.getData("text"));
-        }}
         style={{
           width: "100%",
           padding: 12,
           fontSize: 14,
+          lineHeight: 1.5,
           borderRadius: 6,
-          border: "2px solid red",
-          backgroundColor: "#000",   // force contrast
-          color: "#00ff00",
+          border: "1px solid #d1d5db",
+          marginBottom: 12,
+          color: "#111827",          // dark readable text
+          backgroundColor: "#ffffff"
         }}
       />
 
-
-      <div style={{ marginTop: 8, fontSize: 12, color: "yellow" }}>
-        SCRIPT VALUE: [{script}]
-      </div>
 
 
       {error && (
@@ -162,28 +158,40 @@ export default function RetentionForm() {
             borderRadius: 8,
             border: "1px solid #f59e0b",
             background: "#fff7ed",
+            color: "#7c2d12" // DARK text
           }}
         >
-          <strong>Free limit reached</strong>
-          <p style={{ marginTop: 8 }}>
-            Unlock full analysis for <b>₹49</b>
+          <strong style={{ fontSize: 16 }}>
+            Free limit reached
+          </strong>
+
+          <p style={{ marginTop: 8, fontSize: 14 }}>
+            Unlock full analysis for <b>₹49</b> and get:
           </p>
+
+          <ul style={{ marginTop: 8, fontSize: 13, paddingLeft: 18 }}>
+            <li>Exact drop-off fixes</li>
+            <li>Optimized hooks</li>
+            <li>Higher retention score</li>
+          </ul>
+
           <button
             style={{
-              marginTop: 8,
-              padding: "10px 16px",
+              marginTop: 12,
+              padding: "10px 18px",
               borderRadius: 6,
               border: "none",
               background: "#f59e0b",
               color: "#000",
               fontWeight: 600,
-              cursor: "pointer",
+              cursor: "pointer"
             }}
           >
             Pay ₹49 & Unlock
           </button>
         </div>
-      )}
+    )}
+
 
       <p style={{ marginTop: 20, fontSize: 12, color: "#888" }}>
         Free analysis shows drop-off prediction.
