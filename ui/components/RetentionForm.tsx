@@ -80,7 +80,7 @@ export default function RetentionForm() {
 
   function loadRazorpayScript(): Promise<boolean> {
     return new Promise((resolve) => {
-      if (window.Razorpay) {
+      if ((window as any).Razorpay) {
         resolve(true);
         return;
       }
@@ -132,7 +132,7 @@ export default function RetentionForm() {
       };
 
       // @ts-ignore
-      const paymentObject = new window.Razorpay(options);
+      const paymentObject = new (window as any).Razorpay(options);
       paymentObject.open();
     } catch (err) {
       setError("Payment failed. Please try again.");
