@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import Razorpay from "razorpay";
 import { NextResponse } from "next/server";
 
