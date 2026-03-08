@@ -9,20 +9,22 @@ export default function Home() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: "radial-gradient(circle at top, #1a1a1a, #0e0e0e)",
-        padding: 16,
+        background: "linear-gradient(180deg, #0f172a 0%, #111827 45%, #020617 100%)",
+        padding: "40px 16px",
       }}
     >
-      <RetentionForm />
-    <div style={{ marginTop: 16, fontSize: 12, color: "#9ca3af" }}>
-      <a href="/terms" style={{ color: "#9ca3af", marginRight: 8 }}>
-        Terms
-      </a>
-      ·
-      <a href="/privacy" style={{ color: "#9ca3af", marginLeft: 8 }}>
-        Privacy
-      </a>
+      <div style={{ width: "100%", maxWidth: 860 }}>
+        <RetentionForm />
+      </div>
+      <div style={{ marginTop: 18, fontSize: 12, color: "#94a3b8" }}>
+        <a href="/terms" style={{ color: "#94a3b8", marginRight: 8 }}>
+          Terms
+        </a>
+        ·
+        <a href="/privacy" style={{ color: "#94a3b8", marginLeft: 8 }}>
+          Privacy
+        </a>
+      </div>
     </div>
-  </div>
   );
 }
