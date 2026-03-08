@@ -157,8 +157,12 @@ export default function RetentionForm() {
         Creator Retention Coach
       </h1>
 
-      <p style={{ color: "#555", marginBottom: 16 }}>
+      <p style={{ color: "#555", marginBottom: 8 }}>
         Predict where viewers drop off - before you publish.
+      </p>
+
+      <p style={{ color: "#6b7280", marginBottom: 16, fontSize: 13 }}>
+        Used by creators to improve viewer retention and watch time.
       </p>
 
       <textarea
@@ -189,7 +193,21 @@ export default function RetentionForm() {
         </div>
       )}
 
-      <button onClick={handleAnalyze} disabled={loading}>
+      <button
+        onClick={handleAnalyze}
+        disabled={loading}
+        style={{
+          background: loading ? "#9ca3af" : "#111827",
+          color: "#ffffff",
+          border: "none",
+          borderRadius: 8,
+          padding: "10px 16px",
+          fontSize: 14,
+          fontWeight: 600,
+          cursor: loading ? "not-allowed" : "pointer",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+        }}
+      >
         {loading ? "Analyzing..." : "Analyze Retention"}
       </button>
 
