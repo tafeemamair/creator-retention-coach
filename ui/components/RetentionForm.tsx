@@ -35,7 +35,6 @@ type RazorpayInstance = {
   open: () => void;
   on: (event: string, callback: () => void) => void;
 };
-const PRICE_LABEL = "₹49";
 const MAX_WORDS = 2000;
 
 export default function RetentionForm() {
@@ -112,8 +111,9 @@ export default function RetentionForm() {
       if (data.blocked) {
         setShowPaywall(true);
       } else {
-        setShowPaywall(false);
-        if (document.cookie.includes("paid=true")) {
+        const paid = document.cookie.includes("paid=true");
+        setShowPaywall(!paid && Boolean(data.result));
+        if (paid) {
           setSuccessMessage("Full analysis unlocked successfully!");
         }
       }
@@ -342,9 +342,10 @@ export default function RetentionForm() {
             position: "relative",
             borderRadius: 10,
             border: "1px dashed #cbd5e1",
-            padding: 14,
+            padding: 16,
             background: "#ffffff",
             overflow: "hidden",
+            minHeight: showPaywall ? 290 : "auto",
           }}
         >
           <div style={{ filter: "blur(4px)", color: "#334155", userSelect: "none" }}>
@@ -357,50 +358,67 @@ export default function RetentionForm() {
               position: "absolute",
               inset: 0,
               display: "flex",
-              alignItems: "center",
+              alignItems: showPaywall ? "stretch" : "center",
               justifyContent: "center",
               color: "#0f172a",
               fontWeight: 700,
-              background: "linear-gradient(to bottom, rgba(248,250,252,0.25), rgba(248,250,252,0.8))",
+              background: "linear-gradient(to bottom, rgba(248,250,252,0.4), rgba(248,250,252,0.95))",
             }}
           >
-            🔒 Locked Premium Insights
+            {showPaywall ? (
+              <div
+                style={{
+                  width: "100%",
+                  maxWidth: 500,
+                  margin: "0 auto",
+                  padding: 18,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  gap: 12,
+                }}
+              >
+                <p style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>
+                  🔒 Complete Retention Analysis Available
+                </p>
+                <div style={{ color: "#1e293b", fontSize: 14, lineHeight: 1.6, fontWeight: 500 }}>
+                  <p style={{ margin: "0 0 6px", fontWeight: 700 }}>Unlock to get:</p>
+                  <p style={{ margin: 0 }}>• Exact script fixes</p>
+                  <p style={{ margin: 0 }}>• Optimized hooks</p>
+                  <p style={{ margin: 0 }}>• Line-by-line script rewrite</p>
+                  <p style={{ margin: 0 }}>• 3 improved script versions</p>
+                  <p style={{ margin: 0 }}>• Viral title suggestions</p>
+                  <p style={{ margin: 0 }}>• Full retention score breakdown</p>
+                </div>
+                <button
+                  onClick={handlePayment}
+                  disabled={paymentLoading}
+                  style={{
+                    background: paymentLoading
+                      ? "#94a3b8"
+                      : "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: 12,
+                    padding: "14px 24px",
+                    fontSize: 17,
+                    fontWeight: 800,
+                    cursor: paymentLoading ? "not-allowed" : "pointer",
+                    boxShadow: "0 12px 28px rgba(37, 99, 235, 0.4)",
+                    width: "100%",
+                    maxWidth: 340,
+                  }}
+                >
+                  {paymentLoading ? "Processing..." : "Unlock Full Analysis – ₹49"}
+                </button>
+              </div>
+            ) : (
+              <span>🔒 Locked Premium Insights</span>
+            )}
           </div>
         </div>
       </div>
-
-      {showPaywall && (
-        <div
-          style={{
-            marginTop: 20,
-            paddingTop: 18,
-            borderTop: "1px solid #e2e8f0",
-          }}
-        >
-          <p style={{ marginBottom: 10, color: "#1e293b", fontWeight: 600 }}>
-            Your free preview is ready. Unlock complete retention fixes for just {PRICE_LABEL}.
-          </p>
-          <button
-            onClick={handlePayment}
-            disabled={paymentLoading}
-            style={{
-              background: paymentLoading ? "#94a3b8" : "linear-gradient(135deg, #2563eb, #1d4ed8)",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: 10,
-              padding: "12px 18px",
-              fontSize: 15,
-              fontWeight: 700,
-              cursor: paymentLoading ? "not-allowed" : "pointer",
-              boxShadow: "0 10px 25px rgba(37, 99, 235, 0.35)",
-              width: "100%",
-              maxWidth: 320,
-            }}
-          >
-            {paymentLoading ? "Processing..." : "Unlock Full Analysis – ₹49"}
-          </button>
-        </div>
-      )}
     </div>
   );
 }
