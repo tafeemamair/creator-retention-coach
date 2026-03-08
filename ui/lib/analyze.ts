@@ -277,9 +277,10 @@ export async function analyzeRetention(
 FREE ANALYSIS (Preview)
 
 Estimated Duration: ${result.estimatedDuration}
+Hook Strength Score: ${Math.max(0, Math.min(10, (hookStrengthScore + 2) * 2))}/10
+One Retention Risk: ${result.weaknesses[0] || "Pacing may become flat in the middle section."}
 
 • Likely drop-off time: around second ${Math.round((estimatedSeconds * 0.3))} (estimate)
-• One key issue: ${result.weaknesses[0] || "N/A"}
 
 Upgrade to unlock:
 – Exact fixes
