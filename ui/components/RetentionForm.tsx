@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 declare global {
   interface Window {
@@ -25,7 +26,11 @@ type RazorpayOptions = {
   modal: {
     ondismiss: () => void;
   };
-  handler: () => void;
+  handler: (response: {
+    razorpay_payment_id: string;
+    razorpay_order_id: string;
+    razorpay_signature: string;
+  }) => void;
   theme: {
     color: string;
   };
@@ -33,11 +38,21 @@ type RazorpayOptions = {
 
 type RazorpayInstance = {
   open: () => void;
-  on: (event: string, callback: () => void) => void;
+  on: (event: string, callback: (response?: PaymentFailureResponse) => void) => void;
 };
+
+type PaymentFailureResponse = {
+  error?: {
+    description?: string;
+    reason?: string;
+  };
+};
+
 const MAX_WORDS = 2000;
 
 export default function RetentionForm() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [script, setScript] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,17 +60,12 @@ export default function RetentionForm() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [autoAnalyzeDone, setAutoAnalyzeDone] = useState(false);
 
   const wordCount = useMemo(() => {
     const trimmed = script.trim();
     return trimmed ? trimmed.split(/\s+/).length : 0;
   }, [script]);
-
-  useEffect(() => {
-    if (document.cookie.includes("paid=true")) {
-      setShowPaywall(false);
-    }
-  }, []);
 
   function validateScript(input: string): string | null {
     if (!input || !input.trim()) {
@@ -75,10 +85,10 @@ export default function RetentionForm() {
     return null;
   }
 
-  async function handleAnalyze() {
+  const analyzeScript = useCallback(async (inputScript: string) => {
     if (loading) return;
 
-    const validationError = validateScript(script);
+    const validationError = validateScript(inputScript);
     if (validationError) {
       setError(validationError);
       return;
@@ -93,7 +103,7 @@ export default function RetentionForm() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ script }),
+        body: JSON.stringify({ script: inputScript }),
         credentials: "include",
       });
 
@@ -122,6 +132,28 @@ export default function RetentionForm() {
     } finally {
       setLoading(false);
     }
+  }, [loading]);
+
+
+  useEffect(() => {
+    const isPaid = document.cookie.includes("paid=true");
+
+    if (isPaid) {
+      setShowPaywall(false);
+    }
+
+    if (pathname === "/results" && isPaid && !autoAnalyzeDone) {
+      const savedScript = window.sessionStorage.getItem("unlockScript");
+      if (savedScript) {
+        setScript(savedScript);
+        void analyzeScript(savedScript);
+      }
+      setAutoAnalyzeDone(true);
+    }
+  }, [pathname, autoAnalyzeDone, analyzeScript]);
+
+  async function handleAnalyze() {
+    await analyzeScript(script);
   }
 
   function loadRazorpayScript(): Promise<boolean> {
@@ -131,7 +163,18 @@ export default function RetentionForm() {
         return;
       }
 
+      const existingScript = document.getElementById("razorpay-checkout-js") as
+        | HTMLScriptElement
+        | null;
+
+      if (existingScript) {
+        existingScript.addEventListener("load", () => resolve(true), { once: true });
+        existingScript.addEventListener("error", () => resolve(false), { once: true });
+        return;
+      }
+
       const scriptTag = document.createElement("script");
+      scriptTag.id = "razorpay-checkout-js";
       scriptTag.src = "https://checkout.razorpay.com/v1/checkout.js";
       scriptTag.onload = () => resolve(true);
       scriptTag.onerror = () => resolve(false);
@@ -139,7 +182,7 @@ export default function RetentionForm() {
     });
   }
 
-  async function handlePayment() {
+  async function handleUnlock() {
     if (paymentLoading) return;
 
     setPaymentLoading(true);
@@ -160,6 +203,8 @@ export default function RetentionForm() {
     }
 
     try {
+      window.sessionStorage.setItem("unlockScript", script);
+
       const res = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -187,6 +232,7 @@ export default function RetentionForm() {
         },
         modal: {
           ondismiss: () => {
+            setError("Payment was cancelled. You can try again anytime.");
             setPaymentLoading(false);
           },
         },
@@ -194,7 +240,8 @@ export default function RetentionForm() {
           document.cookie = "paid=true; path=/; max-age=31536000; SameSite=Lax";
           setShowPaywall(false);
           setSuccessMessage("Payment successful! Full analysis unlocked.");
-          handleAnalyze();
+          setPaymentLoading(false);
+          router.push("/results");
         },
         theme: {
           color: "#2563eb",
@@ -202,14 +249,15 @@ export default function RetentionForm() {
       };
 
       const paymentObject = new window.Razorpay(options);
-      paymentObject.on("payment.failed", () => {
-        setError("Payment failed. Please try again.");
+      paymentObject.on("payment.failed", (response) => {
+        const description =
+          response?.error?.description || response?.error?.reason || "Payment failed.";
+        setError(`${description} Please try again.`);
         setPaymentLoading(false);
       });
       paymentObject.open();
     } catch {
       setError("Payment failed. Please try again.");
-    } finally {
       setPaymentLoading(false);
     }
   }
@@ -392,7 +440,7 @@ export default function RetentionForm() {
                   <p style={{ margin: 0 }}>• Full retention score breakdown</p>
                 </div>
                 <button
-                  onClick={handlePayment}
+                  onClick={handleUnlock}
                   disabled={paymentLoading}
                   style={{
                     background: paymentLoading
