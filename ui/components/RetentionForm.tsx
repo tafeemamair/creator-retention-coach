@@ -50,6 +50,13 @@ type PaymentFailureResponse = {
 
 const MAX_WORDS = 2000;
 
+type PreviewData = {
+  estimatedDuration: string;
+  hookScore: number;
+  retentionRisk: string;
+  dropOffEstimate: string;
+};
+
 export default function RetentionForm() {
   const router = useRouter();
   const pathname = usePathname();
@@ -58,6 +65,7 @@ export default function RetentionForm() {
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [preview, setPreview] = useState<PreviewData | null>(null);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [autoAnalyzeDone, setAutoAnalyzeDone] = useState(false);
@@ -97,6 +105,7 @@ export default function RetentionForm() {
     setLoading(true);
     setError("");
     setResult("");
+    setPreview(null);
     setSuccessMessage("");
 
     try {
@@ -114,15 +123,20 @@ export default function RetentionForm() {
         return;
       }
 
+      if (data.preview) {
+        setPreview(data.preview as PreviewData);
+      }
+
       if (data.result) {
         setResult(data.result);
       }
 
+      const paid = document.cookie.includes("paid=true");
+
       if (data.blocked) {
-        setShowPaywall(true);
+        setShowPaywall(!paid);
       } else {
-        const paid = document.cookie.includes("paid=true");
-        setShowPaywall(!paid && Boolean(data.result));
+        setShowPaywall(!paid && Boolean(data.result || data.preview));
         if (paid) {
           setSuccessMessage("Full analysis unlocked successfully!");
         }
@@ -372,6 +386,27 @@ export default function RetentionForm() {
           }}
         >
           {result}
+        </div>
+      )}
+
+      {!result && preview && (
+        <div
+          style={{
+            marginTop: 4,
+            borderRadius: 12,
+            border: "1px solid #dbeafe",
+            background: "#eff6ff",
+            padding: 16,
+            color: "#0f172a",
+            fontSize: 14,
+            lineHeight: 1.65,
+          }}
+        >
+          <p style={{ margin: "0 0 8px", fontWeight: 700 }}>FREE ANALYSIS (Preview)</p>
+          <p style={{ margin: "0 0 6px" }}>Estimated Duration: {preview.estimatedDuration}</p>
+          <p style={{ margin: "0 0 6px" }}>Hook Strength Score: {preview.hookScore}/10</p>
+          <p style={{ margin: "0 0 6px" }}>One Retention Risk: {preview.retentionRisk}</p>
+          <p style={{ margin: 0 }}>Likely drop-off time: {preview.dropOffEstimate}</p>
         </div>
       )}
 
