@@ -2,73 +2,106 @@ import Sentiment from "sentiment";
 
 const sentimentAnalyzer = new Sentiment();
 
+type RetentionMetrics = {
+  hook: number;
+  pacing: number;
+  emotion: number;
+  value: number;
+  cta: number;
+};
+
+type DropoffPrediction = {
+  second: number;
+  reason: string;
+};
+
+export type RewriteVersion = {
+  type: "Curiosity Hook" | "Fast-Paced Retention" | "Emotional Storytelling";
+  script: string;
+};
+
 export type FullAnalysis = {
-  estimatedDuration: string;
-  retentionScore: number;
-  hookStrength: string;
-  whatsWorking: string[];
-  whatsHurting: string[];
-  exactFixes: string[];
-  improvedScriptVersions: {
-    version1: string;
-    version2: string;
-    version3: string;
-  };
+  score: number;
+  metrics: RetentionMetrics;
+  dropoffPrediction: DropoffPrediction;
+  retentionTimeline: Array<{ second: number; retention: number }>;
+  rewrites: RewriteVersion[];
+  improvedScript: string;
   viralTitleSuggestions: string[];
-  callToActionDetected: boolean;
 };
 
 export type PreviewAnalysis = {
-  estimatedDuration: string;
-  hookScore: number;
-  retentionRisk: string;
-  dropOffEstimate: string;
+  score: number;
+  metrics: RetentionMetrics;
+  dropoffPrediction: DropoffPrediction;
 };
 
-type OpenAIScriptVersions = {
-  version1?: string;
-  version2?: string;
-  version3?: string;
+type OpenAIRewrites = {
+  curiosityHook?: string;
+  fastPacedRetention?: string;
+  emotionalStorytelling?: string;
   titles?: string[];
 };
 
-function estimateDuration(script: string): { seconds: number; label: string } {
-  const words = script.split(/\s+/).filter(Boolean).length;
-  const seconds = Math.max(8, Math.round((words / 150) * 60));
-  return {
-    seconds,
-    label: `${Math.floor(seconds / 60)}m ${seconds % 60}s`,
-  };
+function words(text: string): string[] {
+  return text.trim().split(/\s+/).filter(Boolean);
 }
 
-function getLines(script: string): string[] {
-  return script
-    .split("\n")
+function estimateDurationSeconds(script: string): number {
+  return Math.max(10, Math.round((words(script).length / 170) * 60));
+}
+
+function toSentenceLines(input: string, maxWords = 120): string {
+  const cleaned = input.replace(/\s+/g, " ").trim();
+  const sentenceChunks = cleaned
+    .split(/(?<=[.!?…])\s+/)
     .map((line) => line.trim())
     .filter(Boolean);
+
+  const lines = sentenceChunks.map((line) => (/[.!?…]$/.test(line) ? line : `${line}.`));
+  const result: string[] = [];
+  let count = 0;
+
+  for (const line of lines) {
+    const lineWords = words(line).length;
+    if (count + lineWords > maxWords) break;
+    result.push(line);
+    count += lineWords;
+  }
+
+  if (result.length === 0) return "Stop scrolling.\nThis changes everything.\nFollow for part two.";
+  return result.join("\n\n");
 }
 
-function fallbackScriptVersions(script: string): FullAnalysis["improvedScriptVersions"] {
-  const base = script.trim();
-  return {
-    version1: `Hook: What if one hidden shift could double your watch time today?\n${base}\nCTA: Comment \"HOOK\" and I will send a stronger intro framework.`,
-    version2: `Hook: Stop scrolling—this is the fastest way to keep viewers watching.\n${base}\nPacing note: Use short lines and quick cuts every 2–3 seconds.\nCTA: Follow for the part 2 breakdown.`,
-    version3: `Hook: I learned this the hard way after losing viewers for months.\n${base}\nStory beat: Start with conflict, reveal turning point, end with action.\nCTA: Share this with a creator who needs it.`,
-  };
+function fallbackRewrites(script: string): RewriteVersion[] {
+  const base = toSentenceLines(script, 80);
+  return [
+    {
+      type: "Curiosity Hook",
+      script: toSentenceLines(
+        `What if one hidden habit is killing your growth? ${base} The twist is simpler than you think. Want the exact checklist? Comment CHECKLIST now.`,
+      ),
+    },
+    {
+      type: "Fast-Paced Retention",
+      script: toSentenceLines(
+        `Stop scrolling. You are losing viewers in the first 3 seconds. Cut the intro. Hit them with the payoff first. Then stack fast pattern interrupts every sentence. Keep each line short. If this helped, follow for daily retention fixes.`,
+      ),
+    },
+    {
+      type: "Emotional Storytelling",
+      script: toSentenceLines(
+        `I almost quit creating after flat retention for months. Then one script structure changed everything. I opened with pain, revealed the turning point, and ended with one clear action. The audience stayed. Save this and share it with a creator friend.`,
+      ),
+    },
+  ];
 }
 
-async function generatePremiumAssets(script: string): Promise<{
-  versions: FullAnalysis["improvedScriptVersions"];
-  titles: string[];
-}> {
+async function generateRewrites(script: string): Promise<{ rewrites: RewriteVersion[]; titles: string[] }> {
   if (!process.env.OPENAI_API_KEY) {
     return {
-      versions: fallbackScriptVersions(script),
-      titles: [
-        "The Silent Habit Destroying Your Life",
-        "Why Waiting Until Tomorrow Is Ruining You",
-        "The Hidden Mistake 90% of People Repeat Daily",
-      ],
+      rewrites: fallbackRewrites(script),
+      titles: ["Your Hook Is Costing You Views", "The 3-Second Fix For Shorts", "Why Viewers Drop Off Fast"],
     };
   }
 
@@ -81,165 +114,117 @@ async function generatePremiumAssets(script: string): Promise<{
       },
       body: JSON.stringify({
         model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-        temperature: 0.8,
+        temperature: 0.7,
         response_format: { type: "json_object" },
         messages: [
           {
             role: "system",
             content:
-              "You are an expert YouTube Shorts script optimizer focused on retention and virality.",
+              "You rewrite YouTube Shorts scripts for retention. Output punchy one-sentence-per-line scripts with strong hook first line and CTA ending.",
           },
           {
             role: "user",
-            content: `Rewrite this YouTube short script into 3 improved versions optimized for viewer retention.\nEach version should be under 60 seconds, have a strong hook in the first 3 seconds, and end with a call to action.\nAlso generate 3 viral titles for this script.\n\nReturn strict JSON with this shape:\n{\n  \"version1\": \"...\",\n  \"version2\": \"...\",\n  \"version3\": \"...\",\n  \"titles\": [\"...\",\"...\",\"...\"]\n}\n\nScript:\n${script}`,
+            content: `Rewrite this script in 3 styles: Curiosity Hook, Fast-Paced Retention, Emotional Storytelling.\nRules:\n- max 120 words each\n- one sentence per line\n- short punchy lines\n- first line is a strong hook\n- fast pacing and curiosity gaps\n- include pattern interrupts\n- end with CTA\n\nReturn strict JSON:\n{\n  "curiosityHook":"...",\n  "fastPacedRetention":"...",\n  "emotionalStorytelling":"...",\n  "titles":["...","...","..."]\n}\n\nScript:\n${script}`,
           },
         ],
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI request failed with status ${response.status}`);
-    }
+    if (!response.ok) throw new Error("OpenAI failed");
 
-    const json = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
+    const json = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const parsed = JSON.parse(json.choices?.[0]?.message?.content ?? "{}") as OpenAIRewrites;
 
-    const content = json.choices?.[0]?.message?.content;
-    if (!content) {
-      throw new Error("OpenAI response did not include content");
-    }
-
-    const parsed = JSON.parse(content) as OpenAIScriptVersions;
-
-    const titles = (parsed.titles ?? []).filter(Boolean).slice(0, 3);
-
-    return {
-      versions: {
-        version1: parsed.version1 || fallbackScriptVersions(script).version1,
-        version2: parsed.version2 || fallbackScriptVersions(script).version2,
-        version3: parsed.version3 || fallbackScriptVersions(script).version3,
+    const rewrites: RewriteVersion[] = [
+      { type: "Curiosity Hook", script: toSentenceLines(parsed.curiosityHook || fallbackRewrites(script)[0].script) },
+      {
+        type: "Fast-Paced Retention",
+        script: toSentenceLines(parsed.fastPacedRetention || fallbackRewrites(script)[1].script),
       },
-      titles:
-        titles.length === 3
-          ? titles
-          : [
-              "The Silent Habit Destroying Your Life",
-              "Why Waiting Until Tomorrow Is Ruining You",
-              "The Hidden Mistake 90% of People Repeat Daily",
-            ],
-    };
-  } catch (error) {
-    console.error("OpenAI premium generation failed:", error);
+      {
+        type: "Emotional Storytelling",
+        script: toSentenceLines(parsed.emotionalStorytelling || fallbackRewrites(script)[2].script),
+      },
+    ];
+
     return {
-      versions: fallbackScriptVersions(script),
-      titles: [
-        "The Silent Habit Destroying Your Life",
-        "Why Waiting Until Tomorrow Is Ruining You",
-        "The Hidden Mistake 90% of People Repeat Daily",
-      ],
+      rewrites,
+      titles: (parsed.titles || []).slice(0, 3).filter(Boolean),
+    };
+  } catch {
+    return {
+      rewrites: fallbackRewrites(script),
+      titles: ["Your Hook Is Costing You Views", "The 3-Second Fix For Shorts", "Why Viewers Drop Off Fast"],
     };
   }
 }
 
-export async function analyzeRetention(
-  script: string,
-  options?: { full?: boolean }
-): Promise<PreviewAnalysis | FullAnalysis> {
-  const lines = getLines(script);
-  const { seconds: estimatedSeconds, label: estimatedDuration } = estimateDuration(script);
+function metricScore(script: string): { metrics: RetentionMetrics; dropoffPrediction: DropoffPrediction; timeline: Array<{ second: number; retention: number }> } {
+  const lineList = script.split("\n").map((l) => l.trim()).filter(Boolean);
+  const hookLine = lineList[0] ?? "";
+  const hook = Math.max(
+    0,
+    Math.min(
+      100,
+      50 +
+        (/(\?|secret|mistake|stop|nobody tells you|what if)/i.test(hookLine) ? 25 : 0) +
+        (words(hookLine).length <= 12 ? 15 : 0) +
+        (hookLine.length > 0 ? 10 : -20),
+    ),
+  );
 
-  const hook = lines.slice(0, 2).join(" ").trim();
-  const hookWordCount = hook.split(/\s+/).filter(Boolean).length;
-  const hookHasCuriosityGap = /(\?|why|what|how|discover|secret|mistake|you’ll never|imagine|surprising)/i.test(hook);
-  const hookHasImperative = /^(imagine|what if|here’s why|let’s|picture this|watch this|did you know|stop|don’t)/i.test(hook);
+  const avgWordsPerLine = lineList.length ? words(script).length / lineList.length : 30;
+  const pacing = Math.max(0, Math.min(100, 100 - Math.abs(avgWordsPerLine - 7) * 10));
 
-  let hookStrengthScore = 0;
-  if (hookHasCuriosityGap) hookStrengthScore += 2;
-  if (hookHasImperative) hookStrengthScore += 1;
-  if (hookWordCount <= 15) hookStrengthScore += 1;
-  if (hookWordCount > 20) hookStrengthScore -= 1;
+  const sentiment = sentimentAnalyzer.analyze(script).score;
+  const emotion = Math.max(0, Math.min(100, 55 + sentiment * 5 + (/(story|felt|pain|fear|win|lost|regret)/i.test(script) ? 15 : 0)));
 
-  const blockLengths = lines.map((line) => line.split(/\s+/).filter(Boolean).length);
-  const maxBlockLength = blockLengths.length > 0 ? Math.max(...blockLengths) : 0;
-  const averageBlockLength = lines.length > 0 ? Math.round(script.split(/\s+/).filter(Boolean).length / lines.length) : 0;
-  const longBlockCount = blockLengths.filter((len) => len > 30).length;
+  const value = Math.max(0, Math.min(100, 45 + (/(how to|step|framework|exact|do this|here's|the key)/i.test(script) ? 35 : 0) + (/(today|now|instantly|in \d+)/i.test(script) ? 10 : 0)));
 
-  const strengths: string[] = [];
-  const weaknesses: string[] = [];
-  const fixes: string[] = [];
+  const cta = /(follow|comment|subscribe|save|share|dm|click)/i.test(script) ? 90 : 30;
 
-  let score = 5 + hookStrengthScore;
-
-  if (hookStrengthScore >= 3) {
-    strengths.push("Your opening creates a strong curiosity loop quickly.");
-  } else {
-    weaknesses.push("Hook needs a sharper curiosity angle in the first 3 seconds.");
-    fixes.push("Open with a bold claim, surprising fact, or question in under 12 words.");
-  }
-
-  if (maxBlockLength > 40 || longBlockCount >= 2 || averageBlockLength > 20) {
-    weaknesses.push("Pacing is dense and may cause mid-video drop-offs.");
-    fixes.push("Break long lines into shorter beats and add pattern interrupts every 2–3 seconds.");
-    score -= 1.5;
-  } else {
-    strengths.push("Pacing feels skimmable with digestible beats.");
-    score += 0.5;
-  }
-
-  const hasPayoff = /(here’s|the secret|the key|the answer|let me show|the fix)/i.test(script);
-  if (hasPayoff) {
-    strengths.push("There is a visible value payoff in the script.");
-    score += 0.5;
-  } else {
-    weaknesses.push("Value reveal is unclear or delayed.");
-    fixes.push("Reveal the core outcome earlier so viewers know why they should keep watching.");
-    score -= 0.5;
-  }
-
-  const callToActionDetected = /(subscribe|comment|click|check|visit|follow|try)/i.test(script);
-  if (!callToActionDetected) {
-    weaknesses.push("No clear call to action is present.");
-    fixes.push("End with one specific CTA: comment, follow, or share.");
-    score -= 0.5;
-  } else {
-    strengths.push("Call to action exists, which can increase engagement signals.");
-  }
-
-  const sentimentScore = sentimentAnalyzer.analyze(script).score;
-  if (sentimentScore > 2) {
-    strengths.push("Emotional tone is energetic and positive.");
-    score += 0.5;
-  } else if (sentimentScore < -2) {
-    weaknesses.push("Emotional tone may feel overly negative.");
-    fixes.push("Reframe pain points with a hopeful payoff to keep viewers engaged.");
-    score -= 0.5;
-  }
-
-  score = Math.max(0, Math.min(10, Math.round(score * 10) / 10));
-
-  const preview: PreviewAnalysis = {
-    estimatedDuration,
-    hookScore: Math.max(0, Math.min(10, hookStrengthScore + 6)),
-    retentionRisk: score >= 7 ? "Low" : score >= 5 ? "Medium" : "High",
-    dropOffEstimate: `Around second ${Math.max(5, Math.round(estimatedSeconds * 0.3))}`,
+  const duration = estimateDurationSeconds(script);
+  const weakMetric = Object.entries({ hook, pacing, emotion, value, cta }).sort((a, b) => a[1] - b[1])[0][0];
+  const reasonMap: Record<string, string> = {
+    hook: "Hook is not strong enough in the opening seconds.",
+    pacing: "Line density is too slow for Shorts pacing.",
+    emotion: "Emotional intensity is too flat.",
+    value: "Value payoff arrives too late.",
+    cta: "No strong CTA to sustain interaction.",
   };
 
-  if (!options?.full) {
-    return preview;
-  }
-
-  const premiumAssets = await generatePremiumAssets(script);
+  const dropoffSecond = Math.max(3, Math.round(duration * (0.2 + (100 - Math.min(hook, pacing)) / 200)));
+  const timeline = Array.from({ length: 11 }, (_, i) => {
+    const second = i * 3;
+    const retention = Math.max(20, Math.round(100 - second * (100 - (hook * 0.35 + pacing * 0.4 + emotion * 0.25) / 1.2) / 30));
+    return { second, retention };
+  });
 
   return {
-    estimatedDuration,
-    retentionScore: score,
-    hookStrength: hook || "No clear hook detected.",
-    whatsWorking: strengths,
-    whatsHurting: weaknesses,
-    exactFixes: fixes,
-    improvedScriptVersions: premiumAssets.versions,
-    viralTitleSuggestions: premiumAssets.titles,
-    callToActionDetected,
+    metrics: { hook, pacing, emotion, value, cta },
+    dropoffPrediction: { second: dropoffSecond, reason: reasonMap[weakMetric] },
+    timeline,
+  };
+}
+
+export async function analyzeRetention(script: string, options?: { full?: boolean }): Promise<PreviewAnalysis | FullAnalysis> {
+  const { metrics, dropoffPrediction, timeline } = metricScore(script);
+  const score = Math.round(
+    metrics.hook * 0.3 + metrics.pacing * 0.25 + metrics.emotion * 0.2 + metrics.value * 0.15 + metrics.cta * 0.1,
+  );
+
+  if (!options?.full) {
+    return { score, metrics, dropoffPrediction };
+  }
+
+  const assets = await generateRewrites(script);
+  return {
+    score,
+    metrics,
+    dropoffPrediction,
+    retentionTimeline: timeline,
+    rewrites: assets.rewrites,
+    improvedScript: assets.rewrites[0]?.script ?? "",
+    viralTitleSuggestions: assets.titles.length ? assets.titles : ["Your Hook Is Costing You Views", "The 3-Second Fix For Shorts", "Why Viewers Drop Off Fast"],
   };
 }

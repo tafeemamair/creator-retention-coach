@@ -14,7 +14,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hot-toast": "^2.6.0",
-    "sentiment": "^5.0.2"
+    "sentiment": "^5.0.2",
+    "recharts": "^2.13.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
