@@ -16,6 +16,19 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Razorpay configuration
+
+Create a `.env.local` file in `ui/` with:
+
+```bash
+RAZORPAY_KEY_ID=rzp_test_xxxxx
+RAZORPAY_KEY_SECRET=xxxxxxxx
+NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_xxxxx
+```
+
+- `RAZORPAY_KEY_SECRET` must stay server-side only and must never be used in frontend code.
+- `NEXT_PUBLIC_RAZORPAY_KEY_ID` is the only key exposed to the browser for Razorpay checkout.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

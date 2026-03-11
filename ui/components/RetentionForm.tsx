@@ -227,7 +227,8 @@ export default function RetentionForm() {
       const order = await res.json();
 
       if (!res.ok || !order?.id) {
-        setError(order?.message || "Could not create payment order. Please retry.");
+        console.error("Create order failed:", order);
+        setError(order?.error || order?.message || "Could not create payment order. Please retry.");
         return;
       }
 
@@ -270,7 +271,8 @@ export default function RetentionForm() {
         setPaymentLoading(false);
       });
       paymentObject.open();
-    } catch {
+    } catch (error) {
+      console.error("Payment flow error:", error);
       setError("Payment failed. Please try again.");
       setPaymentLoading(false);
     }
