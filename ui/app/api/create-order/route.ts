@@ -21,7 +21,7 @@ export async function POST() {
     });
 
     const order = await razorpay.orders.create({
-      amount: 19900,
+      amount: 4900,
       currency: "INR",
       receipt: `retention_analysis_order_${Date.now()}`,
     });
