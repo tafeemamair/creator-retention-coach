@@ -11,6 +11,7 @@ type Analysis = {
   metrics: { hook: number; pacing: number; emotion: number; value: number; cta: number };
   dropoffPrediction: { second: number; reason: string };
   retentionTimeline: Array<{ second: number; retention: number }>;
+  dropOffRisks: Array<{ line: string; reason: string }>;
   rewrites: Array<{ type: "Curiosity Hook" | "Fast-Paced Retention" | "Emotional Storytelling"; script: string }>;
   improvedScript: string;
   viralTitleSuggestions: string[];

@@ -15,6 +15,11 @@ type DropoffPrediction = {
   reason: string;
 };
 
+export type DropOffRisk = {
+  line: string;
+  reason: string;
+};
+
 export type RewriteVersion = {
   type: "Curiosity Hook" | "Fast-Paced Retention" | "Emotional Storytelling";
   script: string;
@@ -24,6 +29,7 @@ export type FullAnalysis = {
   score: number;
   metrics: RetentionMetrics;
   dropoffPrediction: DropoffPrediction;
+  dropOffRisks: DropOffRisk[];
   retentionTimeline: Array<{ second: number; retention: number }>;
   rewrites: RewriteVersion[];
   improvedScript: string;
@@ -41,6 +47,10 @@ type OpenAIRewrites = {
   fastPacedRetention?: string;
   emotionalStorytelling?: string;
   titles?: string[];
+};
+
+type OpenAIDropOffRisks = {
+  dropOffRisks?: Array<{ line?: string; reason?: string }>;
 };
 
 function words(text: string): string[] {
@@ -95,6 +105,95 @@ function fallbackRewrites(script: string): RewriteVersion[] {
       ),
     },
   ];
+}
+
+function fallbackDropOffRisks(script: string): DropOffRisk[] {
+  const lineList = script
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (!lineList.length) return [];
+
+  const risks = lineList
+    .map((line) => {
+      const lineWords = words(line).length;
+      const hasWeakTransition = /^(and|so|but|then|anyway)\b/i.test(line);
+      const hasFiller = /(basically|actually|literally|kind of|sort of)/i.test(line);
+      const lacksPayoff = !/(how|why|because|secret|step|result|mistake|do this)/i.test(line);
+
+      let score = 0;
+      if (lineWords > 14) score += 2;
+      if (lineWords < 3) score += 1;
+      if (hasWeakTransition) score += 2;
+      if (hasFiller) score += 2;
+      if (lacksPayoff) score += 1;
+
+      return {
+        line,
+        score,
+        reason:
+          lineWords > 14
+            ? "This line is dense and may slow pacing, which can trigger swipes in short-form video."
+            : hasWeakTransition
+              ? "This transition feels generic and may not add enough curiosity or value to keep attention."
+              : hasFiller
+                ? "Filler wording weakens momentum and can reduce retention in fast-paced Shorts scripts."
+                : "This line may not deliver clear payoff fast enough to sustain viewer attention.",
+      };
+    })
+    .filter((entry) => entry.score >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(({ line, reason }) => ({ line, reason }));
+
+  return risks;
+}
+
+async function detectDropOffRisks(script: string): Promise<DropOffRisk[]> {
+  if (!process.env.OPENAI_API_KEY) {
+    return fallbackDropOffRisks(script);
+  }
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+        temperature: 0.2,
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a short-form video retention analyst. Return strict JSON only. Keep reasons concise and practical.",
+          },
+          {
+            role: "user",
+            content:
+              'Identify up to 3 lines in the script that may reduce viewer retention. Explain why. Return strict JSON: {"dropOffRisks":[{"line":"...","reason":"..."}]}\n\nScript:\n' +
+              script,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) throw new Error("OpenAI failed");
+
+    const json = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const parsed = JSON.parse(json.choices?.[0]?.message?.content ?? "{}") as OpenAIDropOffRisks;
+
+    return (parsed.dropOffRisks ?? [])
+      .map((item) => ({ line: item.line?.trim() ?? "", reason: item.reason?.trim() ?? "" }))
+      .filter((item) => item.line && item.reason)
+      .slice(0, 3);
+  } catch {
+    return fallbackDropOffRisks(script);
+  }
 }
 
 async function generateRewrites(script: string): Promise<{ rewrites: RewriteVersion[]; titles: string[] }> {
@@ -223,11 +322,12 @@ export async function analyzeRetention(script: string, options?: { full?: boolea
     return { score, metrics, dropoffPrediction };
   }
 
-  const assets = await generateRewrites(script);
+  const [assets, dropOffRisks] = await Promise.all([generateRewrites(script), detectDropOffRisks(script)]);
   return {
     score,
     metrics,
     dropoffPrediction,
+    dropOffRisks,
     retentionTimeline: timeline,
     rewrites: assets.rewrites,
     improvedScript: assets.rewrites[0]?.script ?? "",
