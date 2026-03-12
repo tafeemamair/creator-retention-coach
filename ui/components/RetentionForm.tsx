@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Script from "next/script";
 import RetentionDashboard from "./RetentionDashboard";
 import ScriptRewrite from "./ScriptRewrite";
 
@@ -31,6 +32,20 @@ type FullApiResponse = {
   message?: string;
 };
 
+type CreateOrderResponse = {
+  id: string;
+  amount: number;
+  currency: string;
+  receipt: string;
+  error?: string;
+};
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
+
 export default function RetentionForm() {
   const [script, setScript] = useState("");
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -40,6 +55,8 @@ export default function RetentionForm() {
   const [fullAnalysis, setFullAnalysis] = useState<Analysis | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("Unlock full retention dashboard, script rewrites, and title suggestions for ₹49.");
+
+  const wordCount = script.trim() ? script.trim().split(/\s+/).length : 0;
 
   async function onAnalyzePreview() {
     if (!script.trim()) return;
@@ -71,7 +88,7 @@ export default function RetentionForm() {
     }
   }
 
-  async function onUnlockFullAnalysis() {
+  async function unlockFullAnalysis() {
     if (!script.trim() || !preview) return;
 
     setLoadingFull(true);
@@ -97,6 +114,57 @@ export default function RetentionForm() {
     }
   }
 
+  async function handlePayment() {
+    if (!script.trim() || !preview) return;
+    if (!window.Razorpay) {
+      setError("Payment SDK not loaded. Please refresh and try again.");
+      return;
+    }
+
+    setLoadingFull(true);
+    setError("");
+
+    try {
+      const orderRes = await fetch("/api/create-order", { method: "POST" });
+      const orderData = (await orderRes.json()) as CreateOrderResponse;
+
+      if (!orderRes.ok || !orderData.id) {
+        throw new Error(orderData.error || "Unable to start payment. Please try again.");
+      }
+
+      if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+        throw new Error("Missing NEXT_PUBLIC_RAZORPAY_KEY_ID.");
+      }
+
+      const razorpay = new window.Razorpay({
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Creator Retention Coach",
+        description: "Unlock full script retention analysis",
+        order_id: orderData.id,
+        handler: async () => {
+          document.cookie = "paid=true; Path=/; Max-Age=2592000; SameSite=Lax";
+          await unlockFullAnalysis();
+        },
+        prefill: {
+          name: "Creator",
+        },
+        theme: {
+          color: "#f59e0b",
+        },
+        modal: {
+          ondismiss: () => setLoadingFull(false),
+        },
+      });
+
+      razorpay.open();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+      setLoadingFull(false);
+    }
+  }
+
   const retentionInsight =
     preview && preview.metrics.hook < 70
       ? "Strengthen your first line with a curiosity gap to reduce early drop-off."
@@ -104,6 +172,7 @@ export default function RetentionForm() {
 
   return (
     <div className="space-y-6">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
         <h1 className="text-2xl font-bold">Creator Retention Coach</h1>
         <p className="mb-4 mt-1 text-slate-300">Analyze Shorts scripts with retention metrics and AI rewrites.</p>
@@ -114,6 +183,7 @@ export default function RetentionForm() {
           placeholder="Paste your YouTube Shorts script..."
           className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 text-sm outline-none ring-blue-500 focus:ring"
         />
+        <p className="mt-2 text-xs text-slate-400">Word Count: {wordCount}</p>
         <button
           onClick={onAnalyzePreview}
           disabled={loadingPreview}
@@ -131,7 +201,7 @@ export default function RetentionForm() {
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
               <p className="text-xs text-slate-400">Hook Strength Score</p>
-              <p className="text-2xl font-bold text-blue-300">{preview.metrics.hook}/100</p>
+              <p className="text-2xl font-bold text-blue-300">{Math.round(preview.metrics.hook)} / 100</p>
             </div>
             <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
               <p className="text-xs text-slate-400">Predicted Drop-off</p>
@@ -139,7 +209,7 @@ export default function RetentionForm() {
             </div>
             <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
               <p className="text-xs text-slate-400">Overall Preview Score</p>
-              <p className="text-2xl font-bold text-emerald-300">{preview.score}/100</p>
+              <p className="text-2xl font-bold text-emerald-300">{Math.round(preview.score)} / 100</p>
             </div>
           </div>
 
@@ -148,7 +218,7 @@ export default function RetentionForm() {
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>{retentionInsight}</li>
               <li>{preview.dropoffPrediction.reason}</li>
-              <li>Current pacing score: {preview.metrics.pacing}/100. Keep lines short and dynamic.</li>
+              <li>Pacing Score: {Math.round(preview.metrics.pacing)} / 100. Keep lines short and dynamic.</li>
             </ul>
           </div>
         </section>
@@ -159,7 +229,7 @@ export default function RetentionForm() {
           <h3 className="text-lg font-semibold text-amber-200">Unlock full analysis for ₹49</h3>
           <p className="mt-1 text-sm text-amber-100/90">{upgradeMessage}</p>
           <button
-            onClick={onUnlockFullAnalysis}
+            onClick={handlePayment}
             disabled={loadingFull}
             className="mt-3 rounded-lg bg-amber-500 px-4 py-2 font-medium text-slate-900 hover:bg-amber-400 disabled:opacity-60"
           >

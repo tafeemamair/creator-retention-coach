@@ -162,26 +162,32 @@ async function generateRewrites(script: string): Promise<{ rewrites: RewriteVers
 function metricScore(script: string): { metrics: RetentionMetrics; dropoffPrediction: DropoffPrediction; timeline: Array<{ second: number; retention: number }> } {
   const lineList = script.split("\n").map((l) => l.trim()).filter(Boolean);
   const hookLine = lineList[0] ?? "";
-  const hook = Math.max(
-    0,
-    Math.min(
-      100,
-      50 +
-        (/(\?|secret|mistake|stop|nobody tells you|what if)/i.test(hookLine) ? 25 : 0) +
-        (words(hookLine).length <= 12 ? 15 : 0) +
-        (hookLine.length > 0 ? 10 : -20),
+  const hook = Math.round(
+    Math.max(
+      0,
+      Math.min(
+        100,
+        50 +
+          (/(\?|secret|mistake|stop|nobody tells you|what if)/i.test(hookLine) ? 25 : 0) +
+          (words(hookLine).length <= 12 ? 15 : 0) +
+          (hookLine.length > 0 ? 10 : -20),
+      ),
     ),
   );
 
   const avgWordsPerLine = lineList.length ? words(script).length / lineList.length : 30;
-  const pacing = Math.max(0, Math.min(100, 100 - Math.abs(avgWordsPerLine - 7) * 10));
+  const pacing = Math.round(Math.max(0, Math.min(100, 100 - Math.abs(avgWordsPerLine - 7) * 10)));
 
   const sentiment = sentimentAnalyzer.analyze(script).score;
-  const emotion = Math.max(0, Math.min(100, 55 + sentiment * 5 + (/(story|felt|pain|fear|win|lost|regret)/i.test(script) ? 15 : 0)));
+  const emotion = Math.round(
+    Math.max(0, Math.min(100, 55 + sentiment * 5 + (/(story|felt|pain|fear|win|lost|regret)/i.test(script) ? 15 : 0))),
+  );
 
-  const value = Math.max(0, Math.min(100, 45 + (/(how to|step|framework|exact|do this|here's|the key)/i.test(script) ? 35 : 0) + (/(today|now|instantly|in \d+)/i.test(script) ? 10 : 0)));
+  const value = Math.round(
+    Math.max(0, Math.min(100, 45 + (/(how to|step|framework|exact|do this|here's|the key)/i.test(script) ? 35 : 0) + (/(today|now|instantly|in \d+)/i.test(script) ? 10 : 0))),
+  );
 
-  const cta = /(follow|comment|subscribe|save|share|dm|click)/i.test(script) ? 90 : 30;
+  const cta = Math.round(/(follow|comment|subscribe|save|share|dm|click)/i.test(script) ? 90 : 30);
 
   const duration = estimateDurationSeconds(script);
   const weakMetric = Object.entries({ hook, pacing, emotion, value, cta }).sort((a, b) => a[1] - b[1])[0][0];
