@@ -41,7 +41,7 @@ export default function RetentionDashboard({ data }: { data: DashboardData }) {
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-center text-2xl font-bold">{data.score}/100</p>
+        <p className="text-center text-2xl font-bold">{Math.round(data.score)} / 100</p>
       </div>
 
       <div className="rounded-xl border bg-white p-4 shadow-sm">
