@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Script from "next/script";
 import RetentionDashboard from "./RetentionDashboard";
 import ScriptRewrite from "./ScriptRewrite";
+import PreviewGate from "./PreviewGate";
 
 type Analysis = {
   score: number;
@@ -55,11 +56,25 @@ export default function RetentionForm() {
   const [fullAnalysis, setFullAnalysis] = useState<Analysis | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("Unlock full retention dashboard, script rewrites, and title suggestions for ₹49.");
+  const [platform, setPlatform] = useState<"YouTube Shorts" | "TikTok" | "Instagram Reels">("YouTube Shorts");
 
   const wordCount = script.trim() ? script.trim().split(/\s+/).length : 0;
 
+  const payloadScript = useMemo(() => {
+    if (!script.trim()) return "";
+    return [
+      script.trim(),
+      "",
+      `Optimize this script for retention on ${platform}.`,
+      "Maximum 120 words.",
+      "One sentence per line.",
+      "Short punchy sentences suitable for Shorts.",
+    ].join("\n");
+  }, [script, platform]);
+
+
   async function onAnalyzePreview() {
-    if (!script.trim()) return;
+    if (!payloadScript.trim()) return;
     setLoadingPreview(true);
     setError("");
     setFullAnalysis(null);
@@ -71,7 +86,7 @@ export default function RetentionForm() {
       const res = await fetch("/api/analyze-preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ script }),
+        body: JSON.stringify({ script: payloadScript, platform }),
       });
 
       const data = (await res.json()) as PreviewApiResponse;
@@ -89,7 +104,7 @@ export default function RetentionForm() {
   }
 
   async function unlockFullAnalysis() {
-    if (!script.trim() || !preview) return;
+    if (!payloadScript.trim() || !preview) return;
 
     setLoadingFull(true);
     setError("");
@@ -98,7 +113,7 @@ export default function RetentionForm() {
       const res = await fetch("/api/analyze-full", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ script }),
+        body: JSON.stringify({ script: payloadScript, platform }),
       });
 
       const data = (await res.json()) as FullApiResponse;
@@ -115,7 +130,7 @@ export default function RetentionForm() {
   }
 
   async function handlePayment() {
-    if (!script.trim() || !preview) return;
+    if (!payloadScript.trim() || !preview) return;
     if (!window.Razorpay) {
       setError("Payment SDK not loaded. Please refresh and try again.");
       return;
@@ -165,10 +180,15 @@ export default function RetentionForm() {
     }
   }
 
-  const retentionInsight =
-    preview && preview.metrics.hook < 70
-      ? "Strengthen your first line with a curiosity gap to reduce early drop-off."
-      : "Your hook is solid. Focus on tighter pacing and clear value beats to hold viewers longer.";
+  const retentionInsights = useMemo(() => {
+    if (!preview) return [];
+    const primary =
+      preview.metrics.hook < 70
+        ? "Strengthen your first line with a curiosity gap to reduce early drop-off."
+        : "Your hook is solid. Focus on tighter pacing and clear value beats to hold viewers longer.";
+
+    return [primary, preview.dropoffPrediction.reason];
+  }, [preview]);
 
   return (
     <div className="space-y-6">
@@ -176,6 +196,21 @@ export default function RetentionForm() {
       <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
         <h1 className="text-2xl font-bold">Creator Retention Coach</h1>
         <p className="mb-4 mt-1 text-slate-300">Analyze Shorts scripts with retention metrics and AI rewrites.</p>
+        <div className="mb-3">
+          <label htmlFor="platform" className="mb-1 block text-xs text-slate-300">
+            Platform
+          </label>
+          <select
+            id="platform"
+            value={platform}
+            onChange={(e) => setPlatform(e.target.value as "YouTube Shorts" | "TikTok" | "Instagram Reels")}
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 p-2 text-sm outline-none ring-blue-500 focus:ring"
+          >
+            <option>YouTube Shorts</option>
+            <option>TikTok</option>
+            <option>Instagram Reels</option>
+          </select>
+        </div>
         <textarea
           value={script}
           onChange={(e) => setScript(e.target.value)}
@@ -216,9 +251,9 @@ export default function RetentionForm() {
           <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/60 p-4 text-sm text-slate-200">
             <p className="font-medium text-slate-100">Basic retention insights</p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>{retentionInsight}</li>
-              <li>{preview.dropoffPrediction.reason}</li>
-              <li>Pacing Score: {Math.round(preview.metrics.pacing)} / 100. Keep lines short and dynamic.</li>
+              {retentionInsights.map((insight) => (
+                <li key={insight}>{insight}</li>
+              ))}
             </ul>
           </div>
         </section>
@@ -239,23 +274,25 @@ export default function RetentionForm() {
         </section>
       ) : null}
 
-      {fullAnalysis ? (
-        <>
-          <RetentionDashboard data={fullAnalysis} />
+      {preview ? (
+        <PreviewGate isUnlocked={Boolean(fullAnalysis)}>
+          <div className="space-y-6">
+            {fullAnalysis ? <RetentionDashboard data={fullAnalysis} /> : <div className="rounded-xl border bg-white p-8 text-center text-slate-500 shadow-sm">Complete payment to view full retention charts.</div>}
 
-          <section className="rounded-xl border bg-white p-4 text-slate-900 shadow-sm">
-            <h3 className="mb-2 font-semibold">Viral Title Suggestions</h3>
-            <ul className="list-disc pl-5 text-sm">
-              {fullAnalysis.viralTitleSuggestions.map((title) => (
-                <li key={title}>{title}</li>
-              ))}
-            </ul>
-          </section>
+            <section className="rounded-xl border bg-white p-4 text-slate-900 shadow-sm">
+              <h3 className="mb-2 font-semibold">Viral Title Suggestions</h3>
+              <ul className="list-disc pl-5 text-sm">
+                {(fullAnalysis?.viralTitleSuggestions ?? ["Unlock to view viral title suggestions."]).map((title) => (
+                  <li key={title}>{title}</li>
+                ))}
+              </ul>
+            </section>
 
-          {fullAnalysis.rewrites.map((rewrite) => (
-            <ScriptRewrite key={rewrite.type} original={script} improved={rewrite.script} type={rewrite.type} />
-          ))}
-        </>
+            {(fullAnalysis?.rewrites ?? [{ type: "Curiosity Hook", script: "Unlock to view improved script versions." }]).map((rewrite) => (
+              <ScriptRewrite key={rewrite.type} original={script} improved={rewrite.script} type={rewrite.type} />
+            ))}
+          </div>
+        </PreviewGate>
       ) : null}
     </div>
   );
