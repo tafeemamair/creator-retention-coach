@@ -17,7 +17,9 @@ type DropoffPrediction = {
 
 export type DropOffRisk = {
   line: string;
+  risk: "Low" | "Medium" | "High";
   reason: string;
+  fix: string;
 };
 
 export type RewriteVersion = {
@@ -50,7 +52,7 @@ type OpenAIRewrites = {
 };
 
 type OpenAIDropOffRisks = {
-  dropOffRisks?: Array<{ line?: string; reason?: string }>;
+  dropOffRisks?: Array<{ line?: string; risk?: "Low" | "Medium" | "High"; reason?: string; fix?: string }>;
 };
 
 function words(text: string): string[] {
@@ -107,47 +109,99 @@ function fallbackRewrites(script: string): RewriteVersion[] {
   ];
 }
 
-function fallbackDropOffRisks(script: string): DropOffRisk[] {
-  const lineList = script
+function splitScriptIntoLines(script: string): string[] {
+  const blocks = script
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+  const expanded = blocks.flatMap((line) =>
+    line
+      .split(/(?<=[.!?…])\s+/)
+      .map((part) => part.trim())
+      .filter(Boolean),
+  );
+  return expanded.length ? expanded : blocks;
+}
 
+function normalizeIdea(line: string): string {
+  return line
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\b(the|a|an|and|or|but|so|to|of|in|on|for|with|that|this|it|is|are|be)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function fallbackDropOffRisks(script: string): DropOffRisk[] {
+  const lineList = splitScriptIntoLines(script);
   if (!lineList.length) return [];
 
-  const risks = lineList
-    .map((line) => {
-      const lineWords = words(line).length;
-      const hasWeakTransition = /^(and|so|but|then|anyway)\b/i.test(line);
-      const hasFiller = /(basically|actually|literally|kind of|sort of)/i.test(line);
-      const lacksPayoff = !/(how|why|because|secret|step|result|mistake|do this)/i.test(line);
+  const seenIdeas = new Map<string, number>();
 
-      let score = 0;
-      if (lineWords > 14) score += 2;
-      if (lineWords < 3) score += 1;
-      if (hasWeakTransition) score += 2;
-      if (hasFiller) score += 2;
-      if (lacksPayoff) score += 1;
+  return lineList.map((line, index) => {
+    const lineWords = words(line).length;
+    const normalizedIdea = normalizeIdea(line);
+    const ideaCount = normalizedIdea ? seenIdeas.get(normalizedIdea) ?? 0 : 0;
+    if (normalizedIdea) seenIdeas.set(normalizedIdea, ideaCount + 1);
 
-      return {
-        line,
-        score,
-        reason:
-          lineWords > 14
-            ? "This line is dense and may slow pacing, which can trigger swipes in short-form video."
-            : hasWeakTransition
-              ? "This transition feels generic and may not add enough curiosity or value to keep attention."
-              : hasFiller
-                ? "Filler wording weakens momentum and can reduce retention in fast-paced Shorts scripts."
-                : "This line may not deliver clear payoff fast enough to sustain viewer attention.",
-      };
-    })
-    .filter((entry) => entry.score >= 2)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-    .map(({ line, reason }) => ({ line, reason }));
+    const isOpeningWindow = index <= 1;
+    const hasCuriosityGap = /(\?|secret|nobody|without|until|mistake|what if|why|how)/i.test(line);
+    const hasEmotionalTrigger = /(fear|regret|pain|embarrass|shame|win|lose|urgent|danger|stuck|frustrat)/i.test(line);
+    const hasFillerStart = /^(and|so|but|then|anyway|okay|alright)\b/i.test(line);
+    const hasNewInformation = /(because|which means|result|step|example|number|proof|case|do this|instead)/i.test(line);
 
-  return risks;
+    let score = 0;
+    const reasons: string[] = [];
+    const fixes: string[] = [];
+
+    if (isOpeningWindow && !hasCuriosityGap) {
+      score += 3;
+      reasons.push("Opening line misses the 2-3 second hook window and gives no open loop.");
+      fixes.push("Rewrite as a direct tension line in under 9 words (question or contrarian claim).");
+    }
+
+    if (lineWords > 15) {
+      score += 3;
+      reasons.push(`Sentence is ${lineWords} words; target 9-12 to prevent early swipes.`);
+      fixes.push(`Cut at least ${lineWords - 12} words and keep one idea only.`);
+    } else if (lineWords > 12) {
+      score += 2;
+      reasons.push(`Sentence is ${lineWords} words; this is above the retention-safe range.`);
+      fixes.push(`Trim ${lineWords - 10} words and remove any preamble.`);
+    }
+
+    if (ideaCount > 0) {
+      score += 3;
+      reasons.push("No new information; this repeats a previous idea.");
+      fixes.push("Replace with a new data point, example, or consequence not stated earlier.");
+    }
+
+    if (!hasCuriosityGap && !hasNewInformation && index < Math.ceil(lineList.length * 0.6)) {
+      score += 2;
+      reasons.push("Line states a point but creates zero curiosity gap.");
+      fixes.push("Add a withheld payoff phrase (e.g., '...and the reason is worse than you think').");
+    }
+
+    if (!hasEmotionalTrigger) {
+      score += 1;
+      reasons.push("Emotion is flat; no stakes, pain, or reward trigger.");
+      fixes.push("Inject one emotional consequence using concrete language (loss, fear, relief, status).");
+    }
+
+    if (hasFillerStart) {
+      score += 2;
+      reasons.push("Starts with filler transition, which slows momentum.");
+      fixes.push("Delete the first filler word and begin with the payoff noun or verb.");
+    }
+
+    const risk: DropOffRisk["risk"] = score >= 7 ? "High" : score >= 4 ? "Medium" : "Low";
+    return {
+      line,
+      risk,
+      reason: reasons[0] ?? "Line is clear and adds forward momentum.",
+      fix: fixes[0] ?? "Keep as-is; only tighten by 1-2 words if delivery feels slow.",
+    };
+  });
 }
 
 async function detectDropOffRisks(script: string): Promise<DropOffRisk[]> {
@@ -170,12 +224,12 @@ async function detectDropOffRisks(script: string): Promise<DropOffRisk[]> {
           {
             role: "system",
             content:
-              "You are a short-form video retention analyst. Return strict JSON only. Keep reasons concise and practical.",
+              "You are a ruthless short-form video retention strategist. Return strict JSON only.",
           },
           {
             role: "user",
             content:
-              'Identify up to 3 lines in the script that may reduce viewer retention. Explain why. Return strict JSON: {"dropOffRisks":[{"line":"...","reason":"..."}]}\n\nScript:\n' +
+              'Break the script into line-by-line feedback. For EVERY line or sentence, return exactly one object with keys: line, risk, reason, fix.\nRules:\n- risk must be Low, Medium, or High\n- apply retention rules: first 2-3 seconds critical, >12-15 words is risky, repeated ideas hurt retention, no curiosity gap causes drop, slow buildup causes swipe, emotionless statements underperform\n- be brutally honest; if line adds nothing say "no new information"\n- do NOT use generic phrasing like "improve pacing", "make it more engaging", or "stronger hook needed"\n- fix must be concrete and measurable\nReturn strict JSON: {"dropOffRisks":[{"line":"...","risk":"High","reason":"...","fix":"..."}]}\n\nScript:\n' +
               script,
           },
         ],
@@ -187,10 +241,23 @@ async function detectDropOffRisks(script: string): Promise<DropOffRisk[]> {
     const json = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
     const parsed = JSON.parse(json.choices?.[0]?.message?.content ?? "{}") as OpenAIDropOffRisks;
 
-    return (parsed.dropOffRisks ?? [])
-      .map((item) => ({ line: item.line?.trim() ?? "", reason: item.reason?.trim() ?? "" }))
-      .filter((item) => item.line && item.reason)
-      .slice(0, 3);
+    const normalized = (parsed.dropOffRisks ?? [])
+      .map((item) => ({
+        line: item.line?.trim() ?? "",
+        risk: item.risk,
+        reason: item.reason?.trim() ?? "",
+        fix: item.fix?.trim() ?? "",
+      }))
+      .filter((item) => item.line);
+
+    if (!normalized.length) return fallbackDropOffRisks(script);
+
+    return normalized.map((item) => ({
+      line: item.line,
+      risk: item.risk === "Low" || item.risk === "Medium" || item.risk === "High" ? item.risk : "Medium",
+      reason: item.reason || "No new information in this line.",
+      fix: item.fix || "Replace this line with one concrete outcome in under 12 words.",
+    }));
   } catch {
     return fallbackDropOffRisks(script);
   }
