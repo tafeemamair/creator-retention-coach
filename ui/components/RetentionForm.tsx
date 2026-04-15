@@ -35,11 +35,10 @@ type FullApiResponse = {
 export default function RetentionForm() {
   const [script, setScript] = useState("");
   const [loadingPreview, setLoadingPreview] = useState(false);
-  const [loadingFull, setLoadingFull] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [fullAnalysis, setFullAnalysis] = useState<Analysis | null>(null);
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [status, setStatus] = useState<"locked" | "loading" | "unlocked">("locked");
   const [upgradeMessage, setUpgradeMessage] = useState("Unlock full retention dashboard, script rewrites, and title suggestions for ₹49.");
   const [platform, setPlatform] = useState<"YouTube Shorts" | "TikTok" | "Instagram Reels">("YouTube Shorts");
 
@@ -63,7 +62,7 @@ export default function RetentionForm() {
     setLoadingPreview(true);
     setError("");
     setFullAnalysis(null);
-    setIsUnlocked(false);
+    setStatus("locked");
     setPreview(null);
     setUpgradeMessage("Unlock full retention dashboard, script rewrites, and title suggestions for ₹49.");
 
@@ -91,7 +90,6 @@ export default function RetentionForm() {
   async function unlockFullAnalysis() {
     if (!payloadScript.trim() || !preview) return;
 
-    setLoadingFull(true);
     setError("");
 
     try {
@@ -108,15 +106,18 @@ export default function RetentionForm() {
       setFullAnalysis(data.analysis);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setLoadingFull(false);
     }
   }
 
   const handleUnlock = () => {
     console.log("Unlock clicked");
-    setIsUnlocked(true);
+    setStatus("loading");
     document.cookie = "paid=true; Path=/; Max-Age=2592000; SameSite=Lax";
+
+    setTimeout(() => {
+      setStatus("unlocked");
+    }, 1000);
+
     void unlockFullAnalysis();
   };
 
@@ -198,46 +199,40 @@ export default function RetentionForm() {
         </section>
       ) : null}
 
-      {preview && !isUnlocked ? (
+      {preview && status === "locked" ? (
         <section className="rounded-xl border border-amber-600/60 bg-amber-500/10 p-5">
           <h3 className="text-lg font-semibold text-amber-200">Unlock full analysis for ₹49</h3>
           <p className="mt-1 text-sm text-amber-100/90">{upgradeMessage}</p>
-          <button
-            onClick={handleUnlock}
-            disabled={loadingFull}
-            className="relative z-10 mt-3 rounded-lg bg-amber-500 px-4 py-2 font-medium text-slate-900 hover:bg-amber-400 disabled:opacity-60 pointer-events-auto"
-          >
-            {loadingFull ? "Unlocking..." : "Unlock Full Analysis — ₹49"}
+          <button onClick={handleUnlock} className="mt-3 rounded-lg bg-amber-500 px-4 py-2 font-medium text-slate-900 hover:bg-amber-400">
+            Unlock Full Analysis — ₹49
           </button>
         </section>
       ) : null}
 
-      {preview ? (
-        <section className="relative rounded-xl">
-          {!isUnlocked && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl border border-slate-300/80 bg-white/65 backdrop-blur-sm">
-              <div className="rounded-lg bg-slate-900/90 px-4 py-3 text-center text-sm text-white shadow-lg">Unlock full analysis for ₹49</div>
-            </div>
-          )}
+      {preview && status === "loading" ? (
+        <section className="rounded-xl border border-slate-700 bg-slate-900/50 p-8 text-center text-slate-200">
+          Loading full analysis...
+        </section>
+      ) : null}
 
-          {isUnlocked && (
-            <div className="space-y-6">
-              {fullAnalysis ? <RetentionDashboard data={fullAnalysis} /> : <div className="rounded-xl border bg-white p-8 text-center text-slate-500 shadow-sm">Loading full analysis...</div>}
+      {preview && status === "unlocked" ? (
+        <section className="rounded-xl">
+          <div className="space-y-6">
+            {fullAnalysis ? <RetentionDashboard data={fullAnalysis} /> : <div className="rounded-xl border bg-white p-8 text-center text-slate-500 shadow-sm">Loading full analysis...</div>}
 
-              <section className="rounded-xl border bg-white p-4 text-slate-900 shadow-sm">
-                <h3 className="mb-2 font-semibold">Viral Title Suggestions</h3>
-                <ul className="list-disc pl-5 text-sm">
-                  {(fullAnalysis?.viralTitleSuggestions ?? ["Loading title suggestions..."]).map((title) => (
-                    <li key={title}>{title}</li>
-                  ))}
-                </ul>
-              </section>
+            <section className="rounded-xl border bg-white p-4 text-slate-900 shadow-sm">
+              <h3 className="mb-2 font-semibold">Viral Title Suggestions</h3>
+              <ul className="list-disc pl-5 text-sm">
+                {(fullAnalysis?.viralTitleSuggestions ?? ["Loading title suggestions..."]).map((title) => (
+                  <li key={title}>{title}</li>
+                ))}
+              </ul>
+            </section>
 
-              {(fullAnalysis?.rewrites ?? [{ type: "Curiosity Hook", script: "Loading improved script versions..." }]).map((rewrite) => (
-                <ScriptRewrite key={rewrite.type} original={script} improved={rewrite.script} type={rewrite.type} />
-              ))}
-            </div>
-          )}
+            {(fullAnalysis?.rewrites ?? [{ type: "Curiosity Hook", script: "Loading improved script versions..." }]).map((rewrite) => (
+              <ScriptRewrite key={rewrite.type} original={script} improved={rewrite.script} type={rewrite.type} />
+            ))}
+          </div>
         </section>
       ) : null}
     </div>
