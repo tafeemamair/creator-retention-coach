@@ -55,6 +55,7 @@ export default function RetentionForm() {
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [fullAnalysis, setFullAnalysis] = useState<Analysis | null>(null);
+  const [showFullAnalysis, setShowFullAnalysis] = useState(false);
   const [hasPaid, setHasPaid] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("Unlock full retention dashboard, script rewrites, and title suggestions for ₹49.");
   const [platform, setPlatform] = useState<"YouTube Shorts" | "TikTok" | "Instagram Reels">("YouTube Shorts");
@@ -79,6 +80,7 @@ export default function RetentionForm() {
     setLoadingPreview(true);
     setError("");
     setFullAnalysis(null);
+    setShowFullAnalysis(false);
     setPreview(null);
     setHasPaid(false);
     setUpgradeMessage("Unlock full retention dashboard, script rewrites, and title suggestions for ₹49.");
@@ -129,6 +131,12 @@ export default function RetentionForm() {
       setLoadingFull(false);
     }
   }
+
+  const handleUnlock = () => {
+    console.log("Unlock clicked");
+    setShowFullAnalysis(true);
+    void handlePayment();
+  };
 
   async function handlePayment() {
     if (!payloadScript.trim() || !preview) return;
@@ -265,9 +273,9 @@ export default function RetentionForm() {
           <h3 className="text-lg font-semibold text-amber-200">Unlock full analysis for ₹49</h3>
           <p className="mt-1 text-sm text-amber-100/90">{upgradeMessage}</p>
           <button
-            onClick={handlePayment}
+            onClick={handleUnlock}
             disabled={loadingFull}
-            className="mt-3 rounded-lg bg-amber-500 px-4 py-2 font-medium text-slate-900 hover:bg-amber-400 disabled:opacity-60"
+            className="relative z-10 mt-3 rounded-lg bg-amber-500 px-4 py-2 font-medium text-slate-900 hover:bg-amber-400 disabled:opacity-60 pointer-events-auto"
           >
             {loadingFull ? "Unlocking..." : "Unlock Full Analysis — ₹49"}
           </button>
@@ -275,7 +283,7 @@ export default function RetentionForm() {
         </section>
       ) : null}
 
-      {preview ? (
+      {preview && showFullAnalysis ? (
         <PreviewGate isUnlocked={Boolean(fullAnalysis)}>
           <div className="space-y-6">
             {fullAnalysis ? <RetentionDashboard data={fullAnalysis} /> : <div className="rounded-xl border bg-white p-8 text-center text-slate-500 shadow-sm">Complete payment to view full retention charts.</div>}
