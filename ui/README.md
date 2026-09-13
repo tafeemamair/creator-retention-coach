@@ -1,49 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Creator Retention Coach — Web Application
 
-## Getting Started
+This directory contains the **canonical Next.js application** for Creator Retention Coach. The repository-level [`README.md`](../README.md) contains the complete architecture, security model, testing workflow and portfolio context.
 
-First, run the development server:
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## Razorpay configuration
-
-Create a `.env.local` file in `ui/` with:
+Create `ui/.env.local` with:
 
 ```bash
-RAZORPAY_KEY_ID=rzp_test_xxxxx
-RAZORPAY_KEY_SECRET=xxxxxxxx
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_xxxxx
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+PAYMENT_SESSION_SECRET=
 ```
 
-- `RAZORPAY_KEY_SECRET` must stay server-side only and must never be used in frontend code.
-- `NEXT_PUBLIC_RAZORPAY_KEY_ID` is the only key exposed to the browser for Razorpay checkout.
+`RAZORPAY_KEY_SECRET` and `PAYMENT_SESSION_SECRET` are server-only secrets. Do not expose them through `NEXT_PUBLIC_*` variables or commit them.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quality checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run build
+```
 
-## Learn More
+The repository-level CI workflow runs these checks together with the payment authorization regression tests.
 
-To learn more about Next.js, take a look at the following resources:
+## Key API routes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `POST /api/analyze-preview` — free retention snapshot.
+- `POST /api/create-order` — creates the ₹49 Razorpay order server-side.
+- `POST /api/verify-payment` — verifies the Razorpay signature and paid order before issuing an entitlement.
+- `POST /api/analyze-full` — serves premium analysis only when the signed entitlement is valid.
