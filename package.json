@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "commonjs",
   "scripts": {
-    "dev": "next dev",
-    "cli": "tsx src/index.ts"
+    "cli": "tsx src/index.ts",
+    "test": "tsx --test tests/payment.test.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
