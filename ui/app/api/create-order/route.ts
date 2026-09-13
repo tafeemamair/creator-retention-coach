@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
+import { RETENTION_ANALYSIS_AMOUNT, RETENTION_ANALYSIS_CURRENCY } from "../../../lib/payment";
 
 export async function POST() {
   try {
@@ -21,8 +22,8 @@ export async function POST() {
     });
 
     const order = await razorpay.orders.create({
-      amount: 4900,
-      currency: "INR",
+      amount: RETENTION_ANALYSIS_AMOUNT,
+      currency: RETENTION_ANALYSIS_CURRENCY,
       receipt: `retention_analysis_order_${Date.now()}`,
     });
 
@@ -31,6 +32,7 @@ export async function POST() {
       amount: order.amount,
       currency: order.currency,
       receipt: order.receipt,
+      keyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
     console.error("Razorpay order error:", error);
