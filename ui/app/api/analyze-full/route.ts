@@ -1,15 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { analyzeRetention, type FullAnalysis } from "../../../lib/analyze";
-
-function getCookieValue(cookieHeader: string, key: string): string | undefined {
-  return cookieHeader
-    .split(";")
-    .map((cookie) => cookie.trim())
-    .find((cookie) => cookie.startsWith(`${key}=`))
-    ?.split("=")
-    .slice(1)
-    .join("=");
-}
+import { ENTITLEMENT_COOKIE, verifyEntitlementToken } from "../../../lib/payment";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -19,14 +11,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Please paste a script before analyzing." }, { status: 400 });
   }
 
-  const cookieHeader = req.headers.get("cookie") || "";
-  const isPaid = getCookieValue(cookieHeader, "paid") === "true";
+  const sessionSecret = process.env.PAYMENT_SESSION_SECRET;
+  const entitlement = (await cookies()).get(ENTITLEMENT_COOKIE)?.value;
 
-  if (!isPaid) {
+  if (!sessionSecret || !verifyEntitlementToken(entitlement, sessionSecret)) {
     return NextResponse.json(
       {
         blocked: true,
-        message: "Please upgrade for ₹49 to unlock full analysis, script rewrites, and title suggestions.",
+        message: "Please complete the ₹49 payment to unlock full analysis, script rewrites, and title suggestions.",
       },
       { status: 402 },
     );
