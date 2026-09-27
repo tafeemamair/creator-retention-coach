@@ -1,0 +1,108 @@
+[CRCCreator Retention CoachRetention Intelligence](https://www.creatorretentioncoach.in/)
+[Interactive Demo](https://www.creatorretentioncoach.in#demo)
+[5 Signals](https://www.creatorretentioncoach.in#signals)
+[Pricing](https://www.creatorretentioncoach.in#pricing)
+[Privacy & Trust](https://www.creatorretentioncoach.in#trust)
+[FAQ](https://www.creatorretentioncoach.in#faq)
+[Sign In](https://www.creatorretentioncoach.in/auth/login?next=/app)
+[Audit Script Free](https://www.creatorretentioncoach.in/auth/login?next=/app/analyze)
+
+# Make your scripts harder to scroll past.
+
+Spot weak opening lines, predict the exact second viewers swipe away, and receive 3 retention-engineered rewrites before you hit record.
+[Audit Your Script (1 Free Report)→](https://www.creatorretentioncoach.in/auth/login?next=/app/analyze)
+[See Live Analysis Demo ↓](https://www.creatorretentioncoach.in#demo)
+Instant diagnosis • Authenticated creator workspace • No credit card required
+Algorithmic scoring across Hook (30%), Pacing (25%), Emotion (20%), Value (15%), and CTA (10%).
+Predicts the exact second viewers lose interest and highlights high-risk sentences.
+Curiosity Hook, Fast-Paced Retention, and Emotional Storytelling ready to copy and film.
+
+## See how CRC analyzes a script
+Select a creator example below to inspect the authentic 5-signal breakdown, predicted drop-off curve, and line-level rewrites.
+Opening greeting ('Hey guys, welcome back') delays value delivery past the 3-second scroll threshold.
+Hey guys, welcome back to my channel! Today I want to talk about productivity tools. Most people spend 3 hours a day answering emails and organizing their calendar. But there is a brand new AI workflow that automates this completely in 30 seconds. First, connect your inbox. Second, set your priority rules. If you want my exact prompt template, comment TEMPLATE below and follow for more tech hacks!
+Ready to analyze your own short-form script?
+Receive 1 complete full diagnostic report for your video in seconds.
+[Audit Your Script Free →](https://www.creatorretentioncoach.in/auth/login?next=/app/analyze)
+
+## The Five Retention Signals
+Every short-form script is evaluated across the 5 fundamental structural variables that determine watch time on YouTube Shorts, TikTok, and Instagram Reels.
+Evaluates the first 2–3 seconds for curiosity triggers, pattern interrupts, and friction. Stops the instant swipe away.
+Analyzes words-per-second, spoken momentum, and eliminates conversational filler words that cause mid-video drift.
+Measures psychological tension, relatability, and contrast between the problem and the payoff.
+Checks that the core lesson, hack, or reveal arrives quickly before viewer patience expires.
+Optimizes the ending for natural shares, saves, or comments without sounding like a desperate pitch.
+
+## Know which sentences cause viewers to scroll away
+CRC scans every sentence to flag low-momentum phrasing, channel intros, filler bridges, and weak CTAs before you start filming.
+Greetings waste the golden 0–3 second window where algorithmic swipe decisions are made.
+Cut the intro entirely. Open with the tension: 'You are losing 30% of your gains on this one exercise.'
+Meta-announcements tell viewers what you plan to do rather than delivering value.
+Jump straight to the mechanism: 'Here is why your traditional bank account costs you money.'
+Generic triple CTAs trigger ad fatigue and accelerate the final drop-off.
+Use a single focused trigger: 'Save this reel so you remember to switch accounts this weekend.'
+
+## Three ready-to-film rewrite angles
+Every analysis delivers 3 tailored versions of your script so you can pick the voice and delivery style that fits your content strategy.
+
+### 1. Curiosity Hook
+Opens with high-contrast tension or counter-intuitive friction. Forces viewers to watch until the payoff.
+
+### 2. Fast-Paced Retention
+Cuts fluff words, optimizes syllables-per-second, and uses staccato rhythm to prevent cognitive drift.
+
+### 3. Emotional Storytelling
+Builds immediate personal connection through relatable struggle, high stakes, and vulnerability.
+
+## Transparent credit packs. No subscriptions.
+
+Start with 1 complete full diagnostic report for free. Purchase credits only when you need to analyze new scripts for your filming pipeline.
+
+### 1 Full Analysis Report • ₹0 Free
+Sign in with Google or Magic Link to receive your complete 5-signal report, drop-off timeline, and 3 rewrites.
+[Claim Free Analysis →](https://www.creatorretentioncoach.in/auth/login?next=/app/analyze)
+
+### Single Report
+Perfect for auditing a critical script or testing CRC on an important upcoming video.
+- ✓ 1 Full Retention Intelligence Report
+- ✓ 5-Signal Breakdown & Score (0–100)
+- ✓ Predicted Drop-Off Timeline Curve
+- ✓ 3 Ready-to-Film Rewrites & Titles
+- ✓ Same-script re-analysis is 100% free
+- ✓ 30-Day Credit Validity
+[Get Single Report](https://www.creatorretentioncoach.in/auth/login?next=/app/analyze)
+
+### Creator Pack
+Best value for active creators publishing 2–5 shorts every week across YouTube, TikTok, or Reels.
+- ✓ 5 Full Retention Intelligence Reports
+- ✓ Save 40% vs. Single Report pricing
+- ✓ YouTube Shorts, TikTok & Reels Profiles
+- ✓ 3 Rewrites + Viral Titles for every script
+- ✓ Saved to your private account history
+- ✓ Extended 90-Day Credit Validity
+[Get Creator Pack (₹149)](https://www.creatorretentioncoach.in/auth/login?next=/app/analyze)
+
+## Your creative ideas remain private
+We treat your scripts and video concepts as confidential creator intellectual property with bank-grade isolation and private account security.
+Your saved analyses and script history are isolated in your authenticated workspace with PostgreSQL Row-Level Security (RLS). No other user can access your reports.
+Our cryptographic ledger caches your evaluated scripts. Re-analyzing or retrieving an unchanged script is 100% free and never deducts credits.
+Script rewrites are processed through OpenAI commercial API endpoints. Under official OpenAI business policies, API data is never used to train public AI models.
+All transactions are processed through Razorpay via TLS encryption. Creator Retention Coach never sees, stores, or handles your payment card or UPI credentials.
+Retention scores, estimated drop-off seconds, and retention curves are algorithmic diagnostic signals based on script structure, pacing, and hook dynamics. Final video performance also depends on creator delivery, vocal energy, visual editing, thumbnail packaging, and platform distribution. CRC does not guarantee algorithmic virality or view counts.
+[Privacy Policy](https://www.creatorretentioncoach.in/privacy)
+[Terms of Service](https://www.creatorretentioncoach.in/terms)
+[Refund Policy](https://www.creatorretentioncoach.in/refunds)
+
+## Everything you need to know
+Clear answers about script evaluation, credit packs, and account features.
+
+## Ready to make your next script impossible to scroll past?
+Paste your text, discover your drop-off moments, and get 3 high-retention rewrites in under 10 seconds.
+[Audit Your Script Free (1 Free Report) →](https://www.creatorretentioncoach.in/auth/login?next=/app/analyze)
+Instant analysis • No credit card required • Private creator workspace
+Engineered for YouTube Shorts, TikTok, and Instagram Reels creators.
+[Privacy Policy](https://www.creatorretentioncoach.in/privacy)
+[Terms of Service](https://www.creatorretentioncoach.in/terms)
+[Refund Policy](https://www.creatorretentioncoach.in/refunds)
+[Contact](https://www.creatorretentioncoach.in/contact)
+[Sign In](https://www.creatorretentioncoach.in/auth/login)

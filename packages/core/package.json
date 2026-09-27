@@ -1,0 +1,14 @@
+{
+  "name": "@crc/core",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "sentiment": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/sentiment": "^5.0.4",
+    "typescript": "^5.0.0"
+  }
+}
