@@ -6,16 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "tsx --test lib/__tests__/*.test.ts"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.116.0",
+    "@upstash/redis": "^1.38.4",
     "next": "^16.1.6",
     "razorpay": "^2.9.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hot-toast": "^2.6.0",
-    "sentiment": "^5.0.2",
-    "recharts": "^2.13.3"
+    "recharts": "^2.13.3",
+    "sentiment": "^5.0.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
