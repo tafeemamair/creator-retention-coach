@@ -18,15 +18,7 @@ interface ConsentPageProps {
   }>;
 }
 
-export default async function OAuthConsentPage({ searchParams }: ConsentPageProps) {
-  const params = await searchParams;
-  const {
-    authorization_id,
-    client_id = "ChatGPT / OpenAI",
-    scope = "retention:analyze user:credits",
-    error: incomingError,
-  } = params;
-
+async function getSupabaseServerClient() {
   const cookieStore = await cookies();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co";
   const supabaseAnonKey =
@@ -35,7 +27,7 @@ export default async function OAuthConsentPage({ searchParams }: ConsentPageProp
     process.env.SUPABASE_ANON_KEY ||
     "placeholder-anon-key";
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -51,6 +43,18 @@ export default async function OAuthConsentPage({ searchParams }: ConsentPageProp
       },
     },
   });
+}
+
+export default async function OAuthConsentPage({ searchParams }: ConsentPageProps) {
+  const params = await searchParams;
+  const {
+    authorization_id,
+    client_id = "ChatGPT / OpenAI",
+    scope = "retention:analyze user:credits",
+    error: incomingError,
+  } = params;
+
+  const supabase = await getSupabaseServerClient();
 
   const {
     data: { user },
@@ -98,9 +102,11 @@ export default async function OAuthConsentPage({ searchParams }: ConsentPageProp
       redirect("/app");
     }
 
+    const actionSupabase = await getSupabaseServerClient();
+
     try {
-      if ((supabase.auth as any).oauth?.approveAuthorization) {
-        const { data, error } = await (supabase.auth as any).oauth.approveAuthorization(authorization_id, {
+      if ((actionSupabase.auth as any).oauth?.approveAuthorization) {
+        const { data, error } = await (actionSupabase.auth as any).oauth.approveAuthorization(authorization_id, {
           skipBrowserRedirect: true,
         });
 
@@ -130,9 +136,11 @@ export default async function OAuthConsentPage({ searchParams }: ConsentPageProp
       redirect("/app");
     }
 
+    const actionSupabase = await getSupabaseServerClient();
+
     try {
-      if ((supabase.auth as any).oauth?.denyAuthorization) {
-        const { data, error } = await (supabase.auth as any).oauth.denyAuthorization(authorization_id, {
+      if ((actionSupabase.auth as any).oauth?.denyAuthorization) {
+        const { data, error } = await (actionSupabase.auth as any).oauth.denyAuthorization(authorization_id, {
           skipBrowserRedirect: true,
         });
 
